@@ -88,7 +88,13 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         <Brand />
         <nav className="hidden h-full items-center gap-1 xl:flex" aria-label="Primary navigation">
           {groups.map(group => group.href ? <Link key={group.label} href={group.href} className={`flex h-full items-center gap-2 border-b-2 px-3 text-xs font-medium tracking-wide transition ${pathname.startsWith(group.href) ? 'border-[#e88a34] text-white' : 'border-transparent text-white/58 hover:text-white'}`}><group.icon className="h-3.5 w-3.5" />{group.label}</Link> :
-            <details key={group.label} className="group relative h-full">
+                  <details
+                    key={group.label}
+                    className="group relative h-full"
+                    onMouseLeave={(event) => {
+                      event.currentTarget.open = false;
+                    }}
+                  >
               <summary className="flex h-full cursor-pointer list-none items-center gap-2 border-b-2 border-transparent px-3 text-xs font-medium tracking-wide text-white/58 transition hover:text-white"><group.icon className="h-3.5 w-3.5" />{group.label}<ChevronDown className="h-3 w-3 transition group-open:rotate-180" /></summary>
               <div className="absolute left-0 top-[61px] w-72 border border-white/10 bg-[#0b211d] p-2 shadow-2xl">
                 {group.items?.map(item => <Link key={item.href} href={item.href} className="block px-4 py-3 transition hover:bg-white/[.06]"><span className="block text-sm text-white/85">{item.label}</span><span className="mt-1 block text-[11px] text-white/38">{item.detail}</span></Link>)}
