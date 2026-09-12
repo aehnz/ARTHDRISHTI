@@ -52,8 +52,8 @@ export default function RecoveryPage() {
       </div>
     </section>
     <section className="page-section"><div className="page-wrap grid gap-6 lg:grid-cols-[1.3fr_.7fr]">
-      <div className="surface p-6 md:p-10"><Trajectory data={data}/></div>
-      <aside className="space-y-4">
+      <div className="surface min-w-0 p-6 md:p-10"><Trajectory data={data}/></div>
+      <aside className="min-w-0 space-y-4">
         <div className="surface p-6"><p className="eyebrow">At the end of this plan</p><div className="mt-7 space-y-5">
           {[['Health',`${base.healthScore} → ${data.at(-1)?.health}`],['Buffer',`${base.savings.bufferMonths} → ${data.at(-1)?.buffer} months`],['Monthly headroom',`${formatINR(base.cashFlow.monthlySurplus)} → ${formatINR(data.at(-1)?.cashFlow??0)}`]].map(([a,b])=><div key={a} className="border-b hairline pb-4"><p className="micro-label">{a}</p><p className="font-financial mt-2 text-xl">{b}</p></div>)}
         </div></div>

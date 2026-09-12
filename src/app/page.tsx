@@ -12,10 +12,10 @@ const philosophy = [
 
 export default function LandingPage() {
   return <div className="bg-[#071a17] text-[#fffaf0]">
-    <section className="noise grid-rule relative min-h-[calc(100vh-72px)] overflow-hidden">
+    <section className="adaptive-viewport-section noise grid-rule relative overflow-hidden">
       <div className="absolute left-[7vw] top-0 h-full w-px bg-white/[.06]" />
       <div className="absolute right-[12vw] top-0 h-full w-px bg-white/[.06]" />
-      <div className="page-wrap relative z-10 grid min-h-[calc(100vh-72px)] items-end gap-12 pb-10 pt-20 lg:grid-cols-[1.2fr_.8fr] lg:pb-16">
+      <div className="adaptive-viewport-section landing-hero-content page-wrap relative z-10 grid items-end gap-12 pb-10 pt-20 lg:grid-cols-[1.2fr_.8fr] lg:pb-16">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: .8 }}>
           <div className="mb-8 flex items-center gap-3"><span className="h-px w-12 bg-[#e88a34]" /><p className="eyebrow !text-[#e88a34]">Financial intelligence for Bharat</p></div>
           <h1 className="display-title max-w-[950px]">Your bank sees transactions.<br/><span className="text-[#e88a34]">ARTHDRISHTI</span> sees financial life.</h1>
@@ -26,7 +26,7 @@ export default function LandingPage() {
           </div>
         </motion.div>
         <motion.div className="relative self-center lg:justify-self-end" initial={{ opacity: 0, scale: .94 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: .25, duration: .9 }}>
-          <div className="relative grid h-[330px] w-[330px] place-items-center sm:h-[410px] sm:w-[410px]">
+          <div className="relative grid aspect-square w-[330px] max-w-full place-items-center sm:w-[410px]">
             {[1, .72, .44].map((scale) => <div key={scale} className="absolute rounded-full border border-white/10" style={{ width: `${scale*100}%`, height: `${scale*100}%` }} />)}
             <div className="absolute h-[86%] w-[86%] animate-[spin_28s_linear_infinite] rounded-full border border-dashed border-[#e88a34]/25" />
             <div className="text-center"><p className="font-financial text-7xl text-[#e88a34]">64</p><p className="mt-2 text-[10px] font-bold uppercase tracking-[.22em] text-white/35">Financial health</p><p className="mt-5 max-w-[190px] text-xs leading-5 text-white/46">Tightening, with room to recover</p></div>

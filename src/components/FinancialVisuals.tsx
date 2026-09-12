@@ -8,13 +8,13 @@ import { formatINR } from '@/data/intelligence';
 
 export function PageHeader({ eyebrow, title, description, aside }: { eyebrow: string; title: string; description?: string; aside?: React.ReactNode }) {
   return <header className="border-b hairline bg-[#f8f5ee]">
-    <div className="page-wrap grid gap-8 py-10 md:grid-cols-[1fr_auto] md:items-end md:py-14">
-      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
+    <div className="page-wrap grid gap-8 py-10 md:py-14 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
+      <motion.div className="min-w-0" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
         <p className="eyebrow mb-4">{eyebrow}</p>
         <h1 className="section-title max-w-4xl">{title}</h1>
         {description && <p className="mt-5 max-w-2xl text-sm leading-6 text-muted-foreground md:text-base">{description}</p>}
       </motion.div>
-      {aside}
+      {aside && <div className="min-w-0 lg:max-w-sm">{aside}</div>}
     </div>
   </header>;
 }
@@ -24,7 +24,7 @@ export function HealthScore({ state, dark = false }: { state: FinancialState; da
   const dash = (state.healthScore / 100) * circumference;
   const color = state.healthScore >= 80 ? '#56a88d' : state.healthScore >= 55 ? '#e88a34' : '#d46b61';
   return <div className="relative mx-auto aspect-square w-full max-w-[280px]">
-    <svg viewBox="0 0 184 184" className="-rotate-90">
+    <svg viewBox="0 0 184 184" className="h-full w-full -rotate-90">
       <circle cx="92" cy="92" r="72" fill="none" stroke={dark ? 'rgba(255,255,255,.09)' : '#ded7ca'} strokeWidth="6" />
       <motion.circle cx="92" cy="92" r="72" fill="none" stroke={color} strokeWidth="7" strokeLinecap="butt" strokeDasharray={circumference} initial={{ strokeDashoffset: circumference }} animate={{ strokeDashoffset: circumference - dash }} transition={{ duration: 1.1, ease: 'easeOut' }} />
       {Array.from({ length: 24 }, (_, i) => {
@@ -67,7 +67,7 @@ export function Trajectory({ data, compact = false }: { data: TrajectoryPoint[];
   const splitIndex = Math.max(0, data.findIndex(d => d.projected));
   return <div>
     <div className="mb-6 flex flex-wrap items-end justify-between gap-4"><div><p className="eyebrow mb-2">Financial trajectory</p><h3 className="text-2xl font-medium tracking-[-.035em]">Past → today → what comes next</h3></div><p className="max-w-sm text-xs leading-5 text-muted-foreground">Projection assumes the recommended action is followed. It is an educational simulation, not a guarantee.</p></div>
-    <div className="overflow-x-auto"><svg viewBox={`0 0 ${width} ${height}`} className="min-w-[680px]">
+    <div className="overflow-x-auto"><svg viewBox={`0 0 ${width} ${height}`} className="w-full min-w-[680px]">
       {[0,1,2,3].map(i => <line key={i} x1={pad} x2={width-pad} y1={pad + i*((height-pad*2)/3)} y2={pad + i*((height-pad*2)/3)} stroke="#d8d0c2" strokeDasharray="2 8" />)}
       {splitIndex > 0 && <line x1={points[splitIndex].x - (points[1].x-points[0].x)/2} x2={points[splitIndex].x - (points[1].x-points[0].x)/2} y1={16} y2={height-22} stroke="#e88a34" strokeDasharray="4 6" />}
       <motion.path d={path} fill="none" stroke="#173d34" strokeWidth="3" initial={{ pathLength: 0 }} whileInView={{ pathLength: 1 }} viewport={{ once: true }} transition={{ duration: 1.1 }} />
@@ -81,7 +81,7 @@ export function InsightRow({ insight, onOpen }: { insight: Insight; onOpen?: () 
   const tone = insight.type === 'positive' ? 'text-[#2d7a65]' : insight.type === 'warning' ? 'text-[#b84f49]' : 'text-[#a46020]';
   return <button onClick={onOpen} className="interactive-row grid w-full gap-3 border-t hairline px-1 py-5 text-left md:grid-cols-[150px_1fr_auto] md:items-center">
     <div className={`flex items-center gap-2 text-[10px] font-bold uppercase tracking-[.15em] ${tone}`}><span className="status-dot" />{insight.category.replace('-', ' ')}</div>
-    <div><h3 className="text-[15px] font-semibold tracking-[-.015em]">{insight.title}</h3><p className="mt-1 line-clamp-1 text-xs text-muted-foreground">{insight.description}</p></div>
+    <div><h3 className="text-[15px] font-semibold tracking-[-.015em]">{insight.title}</h3><p className="mt-1 text-xs text-muted-foreground md:line-clamp-1">{insight.description}</p></div>
     <div className="flex items-center gap-4"><span className="font-financial text-sm">{insight.confidence}% confidence</span><ChevronRight className="h-4 w-4 text-muted-foreground" /></div>
   </button>;
 }
@@ -95,8 +95,8 @@ export function Lineage({ insight, state }: { insight: Insight; state: DemoState
       <div className="bg-card p-5"><p className="micro-label">Supporting pattern</p><p className="mt-3 text-lg font-medium">{insight.dataPoints[1] ?? insight.impact}</p></div>
       <div className="bg-card p-5"><p className="micro-label">Evidence</p><p className="mt-3 text-lg font-medium">{transactions.length || insight.transactionIds.length} transactions</p></div>
     </div>
-    {transactions.slice(0, 5).map(t => <div key={t.id} className="flex items-center justify-between border-t hairline px-6 py-4 text-sm"><div><span className="font-medium">{t.merchant}</span><span className="ml-3 text-xs text-muted-foreground">{t.date}</span></div><span className="font-financial">{formatINR(t.amount)}</span></div>)}
-    <div className="flex items-center justify-between border-t hairline bg-[#f4f0e8] px-6 py-4"><p className="text-xs text-muted-foreground">{insight.impact}</p><Link href="/transactions" className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider">View all data <ArrowRight className="h-3.5 w-3.5" /></Link></div>
+    {transactions.slice(0, 5).map(t => <div key={t.id} className="flex flex-col items-start gap-2 border-t hairline px-6 py-4 text-sm sm:flex-row sm:items-center sm:justify-between"><div><span className="font-medium">{t.merchant}</span><span className="ml-3 text-xs text-muted-foreground">{t.date}</span></div><span className="font-financial">{formatINR(t.amount)}</span></div>)}
+    <div className="flex flex-col items-start gap-3 border-t hairline bg-[#f4f0e8] px-6 py-4 sm:flex-row sm:items-center sm:justify-between"><p className="text-xs text-muted-foreground">{insight.impact}</p><Link href="/transactions" className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider">View all data <ArrowRight className="h-3.5 w-3.5" /></Link></div>
   </div>;
 }
 

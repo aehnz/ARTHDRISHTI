@@ -38,11 +38,11 @@ export default function TransactionsPage() {
         {Object.entries(grouped).map(([month, rows]) => <section key={month} className="mb-10">
           <div className="mb-3 flex items-center justify-between"><h2 className="eyebrow">{month}</h2><p className="font-financial text-xs text-muted-foreground">{rows.length} records · {formatINR(rows.filter(r=>r.type==='debit').reduce((s,r)=>s+r.amount,0))} out</p></div>
           <div className="border-y hairline">
-            {rows.map(t => <button key={t.id} onClick={()=>setSelected(t)} className="interactive-row grid w-full gap-3 border-t first:border-t-0 hairline px-2 py-4 text-left md:grid-cols-[42px_1fr_170px_130px] md:items-center">
+            {rows.map(t => <button key={t.id} onClick={()=>setSelected(t)} className="interactive-row grid w-full grid-cols-[42px_minmax(0,1fr)] gap-3 border-t first:border-t-0 hairline px-2 py-4 text-left md:grid-cols-[42px_minmax(0,1fr)_170px_130px] md:items-center">
               <span className={`grid h-9 w-9 place-items-center border ${t.anomaly ? 'border-[#b84f49]/30 bg-[#b84f49]/10 text-[#b84f49]' : t.type==='credit' ? 'border-[#2d7a65]/30 bg-[#2d7a65]/10 text-[#2d7a65]' : 'border-border bg-card text-muted-foreground'}`}>{t.type==='credit'?<ArrowDownLeft className="h-4 w-4"/>:<ArrowUpRight className="h-4 w-4"/>}</span>
-              <div><div className="flex items-center gap-2"><span className="text-sm font-semibold">{t.merchant}</span>{t.isRecurring&&<span className="text-[9px] uppercase tracking-wider text-muted-foreground">Recurring</span>}{t.anomaly&&<span className="text-[9px] font-bold uppercase tracking-wider text-[#b84f49]">Verify</span>}</div><p className="mt-1 text-xs text-muted-foreground">{t.description} · {t.date} at {t.time}</p></div>
-              <p className={`text-xs ${t.anomaly ? 'text-[#b84f49]' : 'text-muted-foreground'}`}>{t.intelligence}</p>
-              <p className={`font-financial text-right text-base ${t.type==='credit'?'text-[#2d7a65]':''}`}>{t.type==='credit'?'+':'−'}{formatINR(t.amount)}</p>
+              <div><div className="flex flex-wrap items-center gap-2"><span className="text-sm font-semibold">{t.merchant}</span>{t.isRecurring&&<span className="text-[9px] uppercase tracking-wider text-muted-foreground">Recurring</span>}{t.anomaly&&<span className="text-[9px] font-bold uppercase tracking-wider text-[#b84f49]">Verify</span>}</div><p className="mt-1 text-xs text-muted-foreground">{t.description} · {t.date} at {t.time}</p></div>
+              <p className={`col-start-2 text-xs md:col-start-auto ${t.anomaly ? 'text-[#b84f49]' : 'text-muted-foreground'}`}>{t.intelligence}</p>
+              <p className={`font-financial col-start-2 text-left text-base md:col-start-auto md:text-right ${t.type==='credit'?'text-[#2d7a65]':''}`}>{t.type==='credit'?'+':'−'}{formatINR(t.amount)}</p>
             </button>)}
           </div>
         </section>)}

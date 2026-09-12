@@ -35,7 +35,7 @@ export default function FinancialLifePage() {
     <section className="page-section pt-10"><div className="page-wrap">
       <div className="mb-8 flex items-end justify-between"><div><p className="eyebrow">Seven dimensions</p><h2 className="mt-3 text-3xl font-medium tracking-[-.045em]">A connected view of financial life</h2></div><Link href="/explain" className="hidden text-xs font-bold uppercase tracking-wider md:block">Trace the model →</Link></div>
       <div className="grid gap-px border border-border bg-border md:grid-cols-2 xl:grid-cols-3">
-        {dimensions.map(([title,items],i)=><article key={String(title)} className={`bg-card p-6 md:p-7 ${i===6?'xl:col-span-3':''}`}><p className="eyebrow">{title as string}</p><dl className={`mt-6 grid ${i===6?'sm:grid-cols-4 gap-4':'grid-cols-2 gap-px bg-border border border-border'}`}>{(items as string[][]).map(([a,b])=><div key={a} className={i===6?'border-l-2 border-[#e88a34] bg-[#f3efe7] p-4':'bg-card p-4'}><dt className="micro-label">{a}</dt><dd className="mt-3 text-sm font-semibold capitalize">{b}</dd></div>)}</dl></article>)}
+        {dimensions.map(([title,items],i)=><article key={String(title)} className={`bg-card p-6 md:p-7 ${i===6?'md:col-span-2 xl:col-span-3':''}`}><p className="eyebrow">{title as string}</p><dl className={`mt-6 grid ${i===6?'sm:grid-cols-4 gap-4':'grid-cols-2 gap-px bg-border border border-border'}`}>{(items as string[][]).map(([a,b])=><div key={a} className={i===6?'border-l-2 border-[#e88a34] bg-[#f3efe7] p-4':'bg-card p-4'}><dt className="micro-label">{a}</dt><dd className="mt-3 text-sm font-semibold capitalize">{b}</dd></div>)}</dl></article>)}
       </div>
     </div></section>
 

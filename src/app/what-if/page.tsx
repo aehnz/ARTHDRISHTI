@@ -28,7 +28,7 @@ export default function WhatIfPage() {
   return <div>
     <PageHeader eyebrow="Decisions · What-if engine" title="Explore the future before committing to it." description="Change income, saving and debt assumptions. Every dependent financial metric recalculates from the same canonical state." aside={<div className={`flex items-center gap-3 border px-4 py-3 text-xs font-bold tracking-[.16em] ${good?'border-[#2d7a65]/30 bg-[#2d7a65]/10 text-[#2d7a65]':bad?'border-[#b84f49]/30 bg-[#b84f49]/10 text-[#b84f49]':'border-border'}`}>{good?<TrendingUp/>:bad?<TrendingDown/>:<Minus/>}{result.direction}</div>} />
     <div className="page-wrap grid gap-6 py-8 lg:grid-cols-[.7fr_1.3fr]">
-      <aside className="surface h-fit p-6 lg:sticky lg:top-24 md:p-8">
+      <aside className="surface min-w-0 h-fit p-6 lg:sticky lg:top-24 md:p-8">
         <p className="eyebrow">Scenario assumptions</p>
         <div className="mt-8 space-y-9">
           <label className="block"><span className="micro-label">Save more each month</span><span className="font-financial mt-3 block text-3xl">{saving>=0?'+':''}{formatINR(saving)}</span><input type="range" aria-label="Monthly saving change" min="-10000" max="30000" step="1000" value={saving} onChange={e=>setSaving(Number(e.target.value))} className="mt-4 w-full accent-[#e88a34]"/></label>
@@ -38,7 +38,7 @@ export default function WhatIfPage() {
         <div className="mt-8 flex flex-wrap gap-2">{[['Save ₹10K',10000,0,0],['Salary +10%',5000,10,0],['Income −20%',0,-20,0],['Prepay EMI',5000,0,-8000],['New car EMI',0,0,18000]].map(([label,s,i,e])=><button key={String(label)} onClick={()=>{setSaving(Number(s));setIncome(Number(i));setEmi(Number(e))}} className="border border-border bg-[#f3efe7] px-3 py-2 text-[10px] font-bold uppercase tracking-wider hover:border-[#e88a34]">{label}</button>)}</div>
         <div className="mt-8"><PrototypeNote/></div>
       </aside>
-      <main className="space-y-6">
+      <main className="min-w-0 space-y-6">
         <section className={`border p-7 md:p-10 ${good?'border-[#2d7a65]/30 bg-[#2d7a65]/[.05]':bad?'border-[#b84f49]/30 bg-[#b84f49]/[.05]':'border-border bg-card'}`}>
           <p className="eyebrow">Simulated outcome</p><div className="mt-5 flex flex-wrap items-end justify-between gap-5"><h2 className="max-w-2xl text-3xl font-medium tracking-[-.045em] md:text-5xl">{good?'This strengthens your financial position.':bad?'This increases financial pressure.':'This has limited material impact.'}</h2><p className="font-financial text-6xl">{result.health}<span className="text-lg text-muted-foreground">/100</span></p></div>
         </section>

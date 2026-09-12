@@ -47,7 +47,7 @@ function Brand() {
       <span className="absolute h-4 w-4 rotate-45 border border-[#e88a34]" />
       <span className="h-1.5 w-1.5 rounded-full bg-[#e88a34]" />
     </span>
-    <span className="hidden text-[12px] font-semibold tracking-[.18em] text-[#fffaf0] sm:block">ARTHDRISHTI</span>
+    <span className="text-[12px] font-semibold tracking-[.18em] text-[#fffaf0]">ARTHDRISHTI</span>
   </Link>;
 }
 
@@ -82,11 +82,11 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     const listener = (event: KeyboardEvent) => { if ((event.metaKey || event.ctrlKey) && event.key === 'k') { event.preventDefault(); setPalette(true); } };
     window.addEventListener('keydown', listener); return () => window.removeEventListener('keydown', listener);
   }, []);
-  return <div className="min-h-screen">
+  return <div className="min-h-svh">
     <header className="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-[#071a17]/95 text-[#fffaf0] backdrop-blur-xl">
       <div className="mx-auto flex h-[72px] max-w-[1500px] items-center gap-5 px-4 sm:px-6">
         <Brand />
-        <nav className="hidden h-full items-center gap-1 xl:flex" aria-label="Primary navigation">
+        <nav className={`hidden h-full items-center gap-1 ${landing ? 'xl:flex' : 'min-[1440px]:flex'}`} aria-label="Primary navigation">
           {groups.map(group => group.href ? <Link key={group.label} href={group.href} className={`flex h-full items-center gap-2 border-b-2 px-3 text-xs font-medium tracking-wide transition ${pathname.startsWith(group.href) ? 'border-[#e88a34] text-white' : 'border-transparent text-white/58 hover:text-white'}`}><group.icon className="h-3.5 w-3.5" />{group.label}</Link> :
                   <details
                     key={group.label}
@@ -96,13 +96,13 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                     }}
                   >
               <summary className="flex h-full cursor-pointer list-none items-center gap-2 border-b-2 border-transparent px-3 text-xs font-medium tracking-wide text-white/58 transition hover:text-white"><group.icon className="h-3.5 w-3.5" />{group.label}<ChevronDown className="h-3 w-3 transition group-open:rotate-180" /></summary>
-              <div className="absolute left-0 top-[61px] w-72 border border-white/10 bg-[#0b211d] p-2 shadow-2xl">
+              <div className="absolute left-0 top-[61px] w-72 max-w-[calc(100vw-2rem)] border border-white/10 bg-[#0b211d] p-2 shadow-2xl">
                 {group.items?.map(item => <Link key={item.href} href={item.href} className="block px-4 py-3 transition hover:bg-white/[.06]"><span className="block text-sm text-white/85">{item.label}</span><span className="mt-1 block text-[11px] text-white/38">{item.detail}</span></Link>)}
               </div>
             </details>)}
         </nav>
         <div className="ml-auto flex items-center gap-2">
-          {!landing && <div className="hidden items-center border border-white/12 2xl:flex">
+          {!landing && <div className="hidden items-center border border-white/12 min-[1440px]:flex">
             <select aria-label="Demo customer" value={persona} onChange={e => setPersona(e.target.value as PersonaId)} className="h-9 border-0 bg-transparent px-3 text-[11px] font-semibold uppercase tracking-wider text-white outline-none"><option value="ravi">Ravi · Recovery</option><option value="ananya">Ananya · Growth</option></select>
             <span className="h-4 w-px bg-white/12" />
             <select aria-label="Demo scenario" value={demoScenario} onChange={e => setDemoScenario(e.target.value as DemoScenario)} className="h-9 border-0 bg-transparent px-3 text-[11px] font-semibold uppercase tracking-wider text-white outline-none"><option value="stable">Stable</option><option value="tightening">Tightening</option><option value="stress">Financial stress</option><option value="anomaly">Fraud / anomaly</option><option value="growth">Growth</option></select>
@@ -110,19 +110,19 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           <button onClick={() => setPalette(true)} aria-label="Open command palette" className="hidden h-9 items-center gap-2 border border-white/12 px-3 text-[11px] text-white/55 transition hover:text-white md:flex"><Command className="h-3.5 w-3.5" /><span>⌘K</span></button>
           <div className="hidden items-center gap-1 sm:flex">{(['en','hi','hinglish'] as Language[]).map(lang => <button key={lang} onClick={() => setLanguage(lang)} className={`px-2 py-2 text-[10px] font-semibold uppercase tracking-wider ${language === lang ? 'text-[#f19a49]' : 'text-white/38 hover:text-white'}`}>{lang === 'hinglish' ? 'Hing' : lang}</button>)}</div>
           {landing && <Link href="/onboarding" className="hidden bg-[#e88a34] px-4 py-2.5 text-[11px] font-bold uppercase tracking-[.12em] text-[#10211d] sm:block">Enter demo</Link>}
-          <button onClick={() => setMobile(!mobile)} aria-label="Toggle menu" className="p-2 2xl:hidden">{mobile ? <X /> : <Menu />}</button>
+          <button onClick={() => setMobile(!mobile)} aria-label="Toggle menu" className={`p-2 ${landing ? 'xl:hidden' : 'min-[1440px]:hidden'}`}>{mobile ? <X /> : <Menu />}</button>
         </div>
       </div>
     </header>
-    <AnimatePresence>{mobile && <motion.div className="fixed inset-0 z-40 overflow-y-auto bg-[#071a17] px-6 pb-10 pt-24 text-white 2xl:hidden" initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 24 }}>
+    <AnimatePresence>{mobile && <motion.div className={`fixed inset-0 z-40 overflow-y-auto bg-[#071a17] px-6 pb-10 pt-24 text-white ${landing ? 'xl:hidden' : 'min-[1440px]:hidden'}`} initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 24 }}>
       <div className="mb-6 grid grid-cols-2 gap-2">
-        <select aria-label="Customer" value={persona} onChange={e => setPersona(e.target.value as PersonaId)} className="border border-white/15 bg-white/[.04] p-3 text-xs"><option value="ravi">Ravi · Recovery</option><option value="ananya">Ananya · Growth</option></select>
-        <select aria-label="Scenario" value={demoScenario} onChange={e => setDemoScenario(e.target.value as DemoScenario)} className="border border-white/15 bg-white/[.04] p-3 text-xs"><option value="stable">Stable</option><option value="tightening">Tightening</option><option value="stress">Stress</option><option value="anomaly">Anomaly</option><option value="growth">Growth</option></select>
+        <select aria-label="Customer" value={persona} onChange={e => setPersona(e.target.value as PersonaId)} className="min-w-0 w-full border border-white/15 bg-white/[.04] p-3 text-xs"><option value="ravi">Ravi · Recovery</option><option value="ananya">Ananya · Growth</option></select>
+        <select aria-label="Scenario" value={demoScenario} onChange={e => setDemoScenario(e.target.value as DemoScenario)} className="min-w-0 w-full border border-white/15 bg-white/[.04] p-3 text-xs"><option value="stable">Stable</option><option value="tightening">Tightening</option><option value="stress">Stress</option><option value="anomaly">Anomaly</option><option value="growth">Growth</option></select>
       </div>
       <div className="mb-6 flex border border-white/15 p-1">{(['en','hi','hinglish'] as Language[]).map(lang => <button key={lang} onClick={() => setLanguage(lang)} className={`flex-1 px-3 py-2 text-[10px] font-bold uppercase tracking-wider ${language === lang ? 'bg-[#e88a34] text-[#10211d]' : 'text-white/40'}`}>{lang === 'hinglish' ? 'Hinglish' : lang}</button>)}</div>
       {groups.map(group => <div key={group.label} className="border-t border-white/10 py-4"><p className="eyebrow !text-white/30">{group.label}</p>{group.href ? <Link onClick={() => setMobile(false)} href={group.href} className="mt-3 flex items-center justify-between text-xl">{group.label}<ArrowUpRight /></Link> : group.items?.map(item => <Link key={item.href} onClick={() => setMobile(false)} href={item.href} className="flex items-center justify-between py-3 text-lg text-white/75">{item.label}<ArrowUpRight className="h-4 w-4" /></Link>)}</div>)}
     </motion.div>}</AnimatePresence>
-    <main className="min-h-screen pt-[72px]">{children}</main>
+    <main className="min-h-svh pt-[72px]">{children}</main>
     <CommandPalette open={palette} onClose={() => setPalette(false)} />
     {!landing && <div className="fixed bottom-4 right-4 z-30 hidden items-center gap-2 border border-[#d9d2c5] bg-[#faf8f3]/95 px-3 py-2 text-[10px] font-bold uppercase tracking-[.13em] text-[#64716d] shadow-lg backdrop-blur md:flex"><Sparkles className="h-3.5 w-3.5 text-[#e88a34]" />Deterministic demo</div>}
   </div>;
