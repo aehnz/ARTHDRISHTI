@@ -2,6 +2,16 @@ import { streamText } from 'ai';
 import { createAnthropic } from '@ai-sdk/anthropic';
 import { NextRequest } from 'next/server';
 
+type IncomingMessage = { role: 'user' | 'assistant'; content: string };
+type IncomingContext = {
+  customerName: string;
+  financialState: {
+    monthlyIncome: number; existingEmi: number; emiBurdenRatio: number;
+    savings: number; bufferMonths: number; cashFlowTrend: string; riskLevel: string;
+  };
+  governanceDecision?: { decision: string; reasoning: string[] };
+};
+
 const anthropic = createAnthropic({
   baseURL: process.env.OPUSMAX_BASE_URL || 'https://api.opusmax.pro',
   apiKey: process.env.OPUSMAX_API_KEY || '',
@@ -9,11 +19,9 @@ const anthropic = createAnthropic({
 
 const MODEL = process.env.OPUSMAX_MODEL || 'claude-sonnet-5';
 
-export const runtime = 'edge';
-
 export async function POST(request: NextRequest) {
   try {
-    const { messages, context } = await request.json();
+    const { messages, context } = await request.json() as { messages: IncomingMessage[]; context: IncomingContext };
 
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
       return new Response(JSON.stringify({ error: 'Messages required' }), { status: 400 });
@@ -24,7 +32,7 @@ export async function POST(request: NextRequest) {
     const result = streamText({
       model: anthropic(MODEL),
       system: systemPrompt,
-      messages: messages.map((m: any) => ({
+      messages: messages.map((m) => ({
         role: m.role,
         content: m.content,
       })),
@@ -41,7 +49,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-function buildSystemPrompt(context: any): string {
+function buildSystemPrompt(context: IncomingContext): string {
   return `You are ARTHDRISHTI's financial communication assistant.
 
 CRITICAL RULES:

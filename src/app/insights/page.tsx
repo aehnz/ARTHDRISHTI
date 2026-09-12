@@ -1,153 +1,32 @@
 'use client';
 
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import {
-  AlertTriangle,
-  TrendingUp,
-  Info,
-  ChevronRight,
-} from 'lucide-react';
+import Link from 'next/link';
+import { AnimatePresence, motion } from 'framer-motion';
+import { ArrowRight, ChevronDown, CircleDollarSign, ShieldAlert, Sparkles, TrendingUp } from 'lucide-react';
+import { useState } from 'react';
+import { Lineage, PageHeader } from '@/components/FinancialVisuals';
 import { useApp } from '@/context/AppContext';
-import { getInsights } from '@/data/mock';
-import type { Insight } from '@/types';
+import { formatINR } from '@/data/intelligence';
 
-type FilterType = 'all' | 'warning' | 'caution' | 'positive' | 'neutral';
+const iconFor = { 'money-leak': CircleDollarSign, risk: ShieldAlert, opportunity: TrendingUp, behaviour: Sparkles, positive: TrendingUp };
 
-export default function InsightsPage() {
-  const { language } = useApp();
-  const [filter, setFilter] = useState<FilterType>('all');
-  const [expandedId, setExpandedId] = useState<string | null>(null);
-
-  const insights = getInsights();
-
-  const filteredInsights = filter === 'all'
-    ? insights
-    : insights.filter(i => i.type === filter);
-
-  const typeConfig = {
-    warning: { bg: 'bg-coral/5', border: 'border-coral/20', text: 'text-coral', label: 'Warning' },
-    caution: { bg: 'bg-accent/5', border: 'border-accent/20', text: 'text-accent', label: 'Caution' },
-    positive: { bg: 'bg-teal/5', border: 'border-teal/20', text: 'text-teal', label: 'Positive' },
-    neutral: { bg: 'bg-secondary', border: 'border-border', text: 'text-muted-foreground', label: 'Info' },
-  };
-
-  return (
-    <div className="min-h-screen">
-      <div className="border-b border-border/50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-            <p className="text-sm text-muted-foreground mb-2">Transaction Intelligence</p>
-            <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight mb-2">Insights</h1>
-            <p className="text-muted-foreground">
-              Your transactions become signals. Here&apos;s what ARTHDRISHTI noticed.
-            </p>
-          </motion.div>
-        </div>
+export default function InsightsPage(){
+  const {demoState}=useApp(); const [open,setOpen]=useState<string|null>(demoState.insights[0]?.id??null);
+  const leak=demoState.financialState.spending.potentialLeaks;
+  return <div>
+    <PageHeader eyebrow="Intelligence · Insights" title="Signals, ranked by consequence." description="No generic AI feed. Each insight carries confidence, impact, evidence and a practical next move." aside={<div className="text-right"><p className="font-financial text-3xl">{formatINR(leak)}</p><p className="micro-label mt-2">potential monthly savings</p></div>} />
+    <section className="page-wrap grid gap-8 py-8 lg:grid-cols-[1.25fr_.75fr]">
+      <div>
+        {demoState.insights.map((insight)=>{const Icon=iconFor[insight.category]; const active=open===insight.id; return <article key={insight.id} className="border-t hairline">
+          <button onClick={()=>setOpen(active?null:insight.id)} className="grid w-full gap-5 py-6 text-left md:grid-cols-[42px_1fr_auto] md:items-start">
+            <span className={`grid h-10 w-10 place-items-center border ${insight.type==='positive'?'border-[#2d7a65]/30 bg-[#2d7a65]/8 text-[#2d7a65]':insight.type==='warning'?'border-[#b84f49]/30 bg-[#b84f49]/8 text-[#b84f49]':'border-[#e88a34]/30 bg-[#e88a34]/8 text-[#a46020]'}`}><Icon className="h-4 w-4"/></span>
+            <div><div className="flex flex-wrap items-center gap-3"><span className="micro-label">{insight.category.replace('-',' ')}</span><span className="font-financial text-[10px] text-muted-foreground">{insight.confidence}% confidence</span></div><h2 className="mt-3 text-2xl font-medium tracking-[-.04em]">{insight.title}</h2><p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">{insight.description}</p><p className="mt-4 text-xs font-semibold text-[#a46020]">{insight.impact}</p></div>
+            <ChevronDown className={`h-5 w-5 text-muted-foreground transition ${active?'rotate-180':''}`}/>
+          </button>
+          <AnimatePresence>{active&&<motion.div initial={{opacity:0,height:0}} animate={{opacity:1,height:'auto'}} exit={{opacity:0,height:0}} className="overflow-hidden pb-7"><Lineage insight={insight} state={demoState}/></motion.div>}</AnimatePresence>
+        </article>})}
       </div>
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex items-center gap-1 bg-secondary rounded p-0.5 w-fit mb-8">
-          {(['all', 'warning', 'caution', 'positive', 'neutral'] as FilterType[]).map(f => (
-            <button
-              key={f}
-              onClick={() => setFilter(f)}
-              className={`px-3 py-1.5 rounded text-sm transition-colors capitalize ${
-                filter === f
-                  ? 'bg-background text-foreground shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              {f === 'all' ? 'All' : typeConfig[f].label}
-            </button>
-          ))}
-        </div>
-
-        <div className="grid lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 space-y-4">
-            {filteredInsights.map((insight, i) => {
-              const config = typeConfig[insight.type];
-              const isExpanded = expandedId === insight.id;
-              return (
-                <motion.div
-                  key={insight.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.05 }}
-                  className={`${config.bg} border ${config.border} rounded p-5 cursor-pointer transition-all hover:shadow-sm`}
-                  onClick={() => setExpandedId(isExpanded ? null : insight.id)}
-                >
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1.5">
-                        {insight.type === 'warning' && <AlertTriangle className={`w-4 h-4 ${config.text}`} />}
-                        {insight.type === 'positive' && <TrendingUp className={`w-4 h-4 ${config.text}`} />}
-                        {insight.type === 'caution' && <Info className={`w-4 h-4 ${config.text}`} />}
-                        <span className="text-sm font-medium">{insight.title}</span>
-                      </div>
-                      <p className="text-sm text-muted-foreground leading-relaxed">{insight.description}</p>
-                    </div>
-                    <ChevronRight className={`w-4 h-4 text-muted-foreground transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
-                  </div>
-
-                  <AnimatePresence>
-                    {isExpanded && (
-                      <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        className="overflow-hidden"
-                      >
-                        <div className="mt-4 pt-4 border-t border-border/50">
-                          <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2">Data Points</p>
-                          <div className="space-y-1.5">
-                            {insight.dataPoints.map((point, j) => (
-                              <div key={j} className="flex items-center gap-2 text-sm">
-                                <div className="w-1 h-1 bg-muted-foreground rounded-full" />
-                                <span className="text-muted-foreground">{point}</span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </motion.div>
-              );
-            })}
-          </div>
-
-          <div className="space-y-6">
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
-              className="bg-card border border-border rounded p-5">
-              <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-4">Active Signals</h3>
-              <div className="space-y-3">
-                {insights.slice(0, 4).map((insight, i) => (
-                  <div key={i} className="flex items-start justify-between gap-3">
-                    <div className="flex-1">
-                      <p className="text-sm font-medium">{insight.title}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">{insight.type}</p>
-                    </div>
-                    <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${
-                      insight.type === 'warning' ? 'bg-coral' : insight.type === 'positive' ? 'bg-teal' : 'bg-accent'
-                    }`} />
-                  </div>
-                ))}
-              </div>
-            </motion.div>
-
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
-              className="bg-card border border-border rounded p-5">
-              <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-3">About Insights</h3>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                ARTHDRISHTI analyzes your transaction patterns to generate behavioral intelligence.
-                Each insight is backed by specific data points from your financial history.
-                Insights are generated by deterministic rules, not AI.
-              </p>
-            </motion.div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+      <aside className="space-y-5"><div className="surface-dark grid-rule p-7"><p className="eyebrow !text-[#e88a34]">Financial leak detector</p><p className="font-financial mt-6 text-5xl">{formatINR(leak)}</p><p className="mt-2 text-xs text-white/38">estimated recoverable each month</p><div className="mt-7 space-y-4 border-t border-white/10 pt-5">{[['Low-use subscription','₹699'],['Food delivery drift','₹2,840'],['Shopping spikes','₹1,120']].map(([a,b])=><div key={a} className="flex justify-between text-xs"><span className="text-white/48">{a}</span><b className="font-financial">{b}</b></div>)}</div><p className="mt-7 text-xs leading-5 text-white/46">Redirecting this amount to emergency savings could reach the target approximately 4 months sooner.</p><Link href="/goals" className="mt-6 inline-flex items-center gap-3 text-xs font-bold uppercase tracking-wider text-[#e88a34]">See goal impact <ArrowRight className="h-4 w-4"/></Link></div><div className="border-l-2 border-[#2d7a65] bg-[#2d7a65]/8 p-6"><p className="eyebrow">Positive signal</p><p className="mt-4 text-sm font-semibold">Stable income remains the foundation.</p><p className="mt-2 text-xs leading-5 text-muted-foreground">ARTHDRISHTI weighs strengths alongside risks so the picture stays balanced.</p></div></aside>
+    </section>
+  </div>;
 }

@@ -1,38 +1,14 @@
-import type { Metadata } from "next";
-import { Inter, Geist_Mono } from "next/font/google";
-import { AppProvider } from "@/context/AppContext";
-import { Toaster } from "@/components/ui/sonner";
-import AppShell from "@/components/AppShell";
-import "./globals.css";
-
-const inter = Inter({
-  variable: "--font-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+import type { Metadata } from 'next';
+import { AppProvider } from '@/context/AppContext';
+import AppShell from '@/components/AppShell';
+import { Toaster } from '@/components/ui/sonner';
+import './globals.css';
 
 export const metadata: Metadata = {
-  title: "ARTHDRISHTI — Financial Intelligence for Bharat",
-  description: "Your bank sees transactions. ARTHDRISHTI sees financial life. An intelligent banking layer that understands financial behavior, explains what matters, and protects customers.",
+  title: { default: 'ARTHDRISHTI — Financial Intelligence for Bharat', template: '%s · ARTHDRISHTI' },
+  description: 'A governed financial intelligence system that understands, protects, explains and helps people grow.',
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  return (
-    <html lang="en" className={`${inter.variable} ${geistMono.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col">
-        <AppProvider>
-          <AppShell>{children}</AppShell>
-          <Toaster />
-        </AppProvider>
-      </body>
-    </html>
-  );
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  return <html lang="en" data-scroll-behavior="smooth"><body><AppProvider><AppShell>{children}</AppShell><Toaster /></AppProvider></body></html>;
 }

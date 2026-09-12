@@ -1,176 +1,19 @@
 'use client';
 
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import {
-  Shield,
-  ShieldCheck,
-  ShieldAlert,
-  Scale,
-  Eye,
-  Lock,
-  ChevronRight,
-  Info,
-} from 'lucide-react';
-import { useApp } from '@/context/AppContext';
-import { getConsentItems } from '@/data/mock';
+import { Check, Eye, LockKeyhole, RotateCcw, ShieldCheck } from 'lucide-react';
+import { useState } from 'react';
+import { PageHeader } from '@/components/FinancialVisuals';
+import { consentItems } from '@/data/intelligence';
 
-export default function ConsentPage() {
-  const { language } = useApp();
-  const [consents, setConsents] = useState(getConsentItems());
-  const [activeTab, setActiveTab] = useState<'overview' | 'details'>('overview');
-
-  const toggleConsent = (id: string) => {
-    setConsents(prev =>
-      prev.map(c =>
-        c.id === id
-          ? { ...c, status: c.status === 'consented' ? 'not_consented' : 'consented' as const }
-          : c
-      )
-    );
-  };
-
-  const consentedCount = consents.filter(c => c.status === 'consented').length;
-  const totalCount = consents.length;
-
-  return (
-    <div className="min-h-screen">
-      <div className="border-b border-border/50">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-            <div className="flex items-center gap-2 mb-2">
-              <Lock className="w-5 h-5 text-teal" />
-              <p className="text-sm text-muted-foreground">Privacy & Consent Center</p>
-            </div>
-            <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight mb-2">
-              Your data, your control
-            </h1>
-            <p className="text-muted-foreground">
-              ARTHDRISHTI uses your financial data to provide personalized insights. You control what data is used and why.
-            </p>
-          </motion.div>
-        </div>
+export default function ConsentPage(){
+  const [enabled,setEnabled]=useState<Record<string,boolean>>(()=>Object.fromEntries(consentItems.map(i=>[i.id,i.status==='consented'])));
+  return <div>
+    <PageHeader eyebrow="Trust · Consent center" title="Your data. A clear purpose. Your control." description="Consent is granular, purpose-specific and revocable. ARTHDRISHTI does not use a data source simply because it is available." aside={<div className="flex items-center gap-3 text-[#2d7a65]"><ShieldCheck/><span className="text-xs font-bold uppercase tracking-wider">Consent active</span></div>} />
+    <section className="page-wrap grid gap-8 py-8 lg:grid-cols-[1.2fr_.8fr]">
+      <div className="surface"><div className="grid grid-cols-[1fr_auto] border-b hairline p-6"><div><p className="eyebrow">Data permissions</p><p className="mt-3 text-sm text-muted-foreground">Change any optional permission independently.</p></div><LockKeyhole className="h-5 w-5 text-[#e88a34]"/></div>
+        {consentItems.map(item=><div key={item.id} className="grid gap-5 border-b last:border-b-0 hairline p-6 md:grid-cols-[1fr_1fr_auto] md:items-center"><div><div className="flex items-center gap-3"><h2 className="text-base font-semibold">{item.category}</h2>{item.required&&<span className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">Required</span>}</div><p className="mt-2 text-xs leading-5 text-muted-foreground">{item.description}</p></div><div className="border-l-2 border-[#e88a34] pl-4"><p className="micro-label">Purpose</p><p className="mt-2 text-xs leading-5">{item.purpose}</p></div><button role="switch" aria-checked={enabled[item.id]} disabled={item.required} onClick={()=>setEnabled(v=>({...v,[item.id]:!v[item.id]}))} className={`relative h-7 w-12 rounded-full transition ${enabled[item.id]?'bg-[#2d7a65]':'bg-[#b8afa0]'} disabled:opacity-60`}><span className={`absolute top-1 h-5 w-5 rounded-full bg-white transition ${enabled[item.id]?'left-6':'left-1'}`}/></button></div>)}
       </div>
-
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Overview */}
-        <div className="grid sm:grid-cols-3 gap-4 mb-8">
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="bg-card border border-border rounded p-5"
-          >
-            <div className="flex items-center gap-2 mb-2">
-              <ShieldCheck className="w-5 h-5 text-teal" />
-              <span className="text-sm font-medium">Consented</span>
-            </div>
-            <p className="text-3xl font-semibold font-financial">{consentedCount}/{totalCount}</p>
-            <p className="text-xs text-muted-foreground mt-1">Data categories active</p>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.15 }}
-            className="bg-card border border-border rounded p-5"
-          >
-            <div className="flex items-center gap-2 mb-2">
-              <Eye className="w-5 h-5 text-accent" />
-              <span className="text-sm font-medium">Transparency</span>
-            </div>
-            <p className="text-3xl font-semibold font-financial">100%</p>
-            <p className="text-xs text-muted-foreground mt-1">Every decision explained</p>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="bg-card border border-border rounded p-5"
-          >
-            <div className="flex items-center gap-2 mb-2">
-              <Scale className="w-5 h-5 text-primary" />
-              <span className="text-sm font-medium">Governance</span>
-            </div>
-            <p className="text-3xl font-semibold font-financial">AI + Rules</p>
-            <p className="text-xs text-muted-foreground mt-1">Decisions by governance, not AI alone</p>
-          </motion.div>
-        </div>
-
-        {/* Privacy statement */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.25 }}
-          className="bg-secondary/30 border border-border rounded p-6 mb-8"
-        >
-          <h3 className="text-sm font-medium mb-2">ARTHDRISHTI does not use personalization as permission to push unsuitable products.</h3>
-          <p className="text-sm text-muted-foreground leading-relaxed">
-            Your financial data is used solely to provide you with personalized insights and responsible recommendations.
-            We do not sell your data, and we do not use your financial behavior to target you with products that may not be suitable for your situation.
-            This system is designed with privacy, consent, and responsible personalization in mind.
-          </p>
-        </motion.div>
-
-        {/* Consent items */}
-        <div className="space-y-4">
-          {consents.map((item, i) => (
-            <motion.div
-              key={item.id}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 + i * 0.05 }}
-              className="bg-card border border-border rounded p-5"
-            >
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h3 className="text-sm font-medium">{item.category}</h3>
-                    {item.required && (
-                      <span className="text-[10px] px-1.5 py-0.5 bg-secondary rounded text-muted-foreground uppercase tracking-wider">
-                        Required
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-sm text-muted-foreground mb-1">{item.description}</p>
-                  <p className="text-xs text-muted-foreground/80">Purpose: {item.purpose}</p>
-                  <div className="flex items-center gap-2 mt-2">
-                    {item.dataPoints.map((point, j) => (
-                      <span key={j} className="text-[10px] px-1.5 py-0.5 bg-secondary/50 rounded text-muted-foreground">
-                        {point}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-
-                <button
-                  onClick={() => !item.required && toggleConsent(item.id)}
-                  disabled={item.required}
-                  className={`flex-shrink-0 px-4 py-1.5 rounded text-xs font-medium transition-colors ${
-                    item.status === 'consented'
-                      ? 'bg-teal/10 text-teal'
-                      : 'bg-secondary text-muted-foreground'
-                  } ${item.required ? 'opacity-70 cursor-not-allowed' : 'hover:opacity-80'}`}
-                >
-                  {item.status === 'consented' ? 'Consented' : 'Not Consented'}
-                </button>
-              </div>
-            </motion.div>
-          ))}
-        </div>
-
-        {/* Footer note */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.8 }}
-          className="mt-8 text-center text-xs text-muted-foreground"
-        >
-          <p>ARTHDRISHTI is designed with privacy, consent, and responsible personalization in mind.</p>
-          <p className="mt-1">This is a hackathon prototype. In production, this would comply with applicable data protection regulations.</p>
-        </motion.div>
-      </div>
-    </div>
-  );
+      <aside className="space-y-5"><div className="surface-dark grid-rule p-7"><Eye className="h-5 w-5 text-[#e88a34]"/><p className="eyebrow mt-7 !text-[#e88a34]">What changes when you revoke?</p><div className="mt-7 space-y-5">{[['Transaction history','Spending insights and lineage pause.'],['EMI and debt','Loan suitability cannot be simulated.'],['Savings','Buffer and resilience become partial.'],['Anomaly detection','Behavioural protection stops.']].map(([a,b])=><div key={a} className="border-b border-white/10 pb-4"><p className="text-sm font-semibold">{a}</p><p className="mt-2 text-xs leading-5 text-white/42">{b}</p></div>)}</div></div><div className="border-l-2 border-[#2d7a65] bg-[#2d7a65]/8 p-6"><div className="flex items-center gap-3"><Check className="h-4 w-4 text-[#2d7a65]"/><p className="text-sm font-semibold">No effect on core account access</p></div><p className="mt-3 text-xs leading-5 text-muted-foreground">Revoking optional intelligence permissions does not block demo authentication.</p></div><button onClick={()=>setEnabled(Object.fromEntries(consentItems.map(i=>[i.id,i.required])))} className="flex w-full items-center justify-between border border-border bg-card p-5 text-xs font-bold uppercase tracking-wider"><span className="flex items-center gap-3"><RotateCcw className="h-4 w-4"/>Revoke optional consent</span><span>→</span></button></aside>
+    </section>
+  </div>;
 }

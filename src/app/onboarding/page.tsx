@@ -1,291 +1,38 @@
 'use client';
 
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import {
-  ChevronRight,
-  ChevronLeft,
-  Globe2,
-  Shield,
-  Wallet,
-  Target,
-  Users,
-  TrendingUp,
-  CheckCircle2,
-  User,
-  Phone,
-  ArrowRight,
-  Activity,
-} from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { ArrowLeft, ArrowRight, Check, Database, Eye, Fingerprint, Globe2, LockKeyhole, ShieldCheck, Smartphone } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import { useApp } from '@/context/AppContext';
+import type { Language } from '@/types';
 
-const LANGUAGES = [
-  { code: 'en', label: 'English', native: 'English' },
-  { code: 'hi', label: 'Hindi', native: 'हिंदी' },
-  { code: 'hinglish', label: 'Hinglish', native: 'हिंग्लिश' },
-];
+const steps=['Welcome','Language','Verify','Goals','Connect','Understand','Ready'];
+const inference=['Reading your transaction patterns…','Understanding recurring commitments…','Estimating financial resilience…','Building your financial state…'];
 
-const GOALS = [
-  { id: 'savings', icon: Wallet, label: 'Build savings', native: 'बचत बनाएं' },
-  { id: 'debt', icon: TrendingUp, label: 'Manage debt', native: 'कर्ज प्रबंधन' },
-  { id: 'purchase', icon: Target, label: 'Plan a major purchase', native: 'बड़ी खरीदारी की योजना' },
-  { id: 'protection', icon: Shield, label: 'Protect my family', native: 'परिवार की सुरक्षा' },
-  { id: 'understand', icon: Activity, label: 'Understand my finances', native: 'अपने वित्त समझें' },
-  { id: 'invest', icon: TrendingUp, label: 'Grow investments', native: 'निवेश बढ़ाएं' },
-];
-
-export default function OnboardingPage() {
-  const { language, setLanguage } = useApp();
-  const [step, setStep] = useState(0);
-  const [selectedGoals, setSelectedGoals] = useState<string[]>([]);
-  const [phone, setPhone] = useState('');
-  const [consents, setConsents] = useState({
-    transactions: false,
-    income: false,
-    emi: false,
-    savings: false,
-  });
-
-  const totalSteps = 5;
-
-  const toggleGoal = (id: string) => {
-    setSelectedGoals(prev =>
-      prev.includes(id) ? prev.filter(g => g !== id) : [...prev, id]
-    );
-  };
-
-  const canProceed = () => {
-    if (step === 0) return language !== null;
-    if (step === 1) return phone.length >= 10;
-    if (step === 2) return selectedGoals.length > 0;
-    if (step === 3) return consents.transactions;
-    return true;
-  };
-
-  return (
-    <div className="min-h-screen bg-background">
-      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Progress */}
-        <div className="flex items-center justify-between mb-8">
-          {Array.from({ length: totalSteps }).map((_, i) => (
-            <div key={i} className="flex items-center gap-2 flex-1">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium transition-colors ${
-                i <= step
-                  ? 'bg-primary text-primary-foreground'
-                  : 'bg-secondary text-muted-foreground'
-              }`}>
-                {i < step ? <CheckCircle2 className="w-4 h-4" /> : i + 1}
-              </div>
-              {i < totalSteps - 1 && (
-                <div className={`h-0.5 flex-1 transition-colors ${
-                  i < step ? 'bg-primary' : 'bg-secondary'
-                }`} />
-              )}
-            </div>
-          ))}
-        </div>
-
+export default function OnboardingPage(){
+  const router=useRouter(); const {language,setLanguage,setIsOnboarded,setPersona}=useApp(); const [step,setStep]=useState(0); const [mobile,setMobile]=useState('98765 43210'); const [otp,setOtp]=useState('123456'); const [goals,setGoals]=useState(['Build emergency fund']); const [inferenceStep,setInferenceStep]=useState(0);
+  useEffect(()=>{if(step!==5)return; const timer=setInterval(()=>setInferenceStep(v=>{if(v>=inference.length-1){clearInterval(timer);setTimeout(()=>setStep(6),500);return v}return v+1}),650);return()=>clearInterval(timer)},[step]);
+  const next=()=>setStep(v=>Math.min(6,v+1)); const back=()=>setStep(v=>Math.max(0,v-1));
+  return <div className="min-h-[calc(100vh-72px)] bg-[#071a17] text-[#fffaf0]">
+    <div className="grid min-h-[calc(100vh-72px)] lg:grid-cols-[.42fr_.58fr]">
+      <aside className="grid-rule noise hidden border-r border-white/10 p-10 lg:flex lg:flex-col lg:justify-between"><div className="relative z-10"><p className="eyebrow !text-[#e88a34]">Financial intelligence for Bharat</p><h1 className="mt-6 text-5xl font-medium leading-[.98] tracking-[-.06em]">A financial life is more than a balance.</h1><p className="mt-6 text-sm leading-6 text-white/42">Connect the patterns. Establish purpose. Make every insight explainable.</p></div><div className="relative z-10"><div className="space-y-4">{steps.map((s,i)=><div key={s} className={`flex items-center gap-3 text-xs ${i===step?'text-white':i<step?'text-[#75bca5]':'text-white/25'}`}><span className={`grid h-6 w-6 place-items-center border ${i===step?'border-[#e88a34] text-[#e88a34]':i<step?'border-[#2d7a65]':'border-white/10'}`}>{i<step?<Check className="h-3 w-3"/>:<span className="font-financial text-[9px]">0{i+1}</span>}</span>{s}</div>)}</div></div></aside>
+      <section className="flex items-center justify-center p-5 md:p-10"><div className="w-full max-w-2xl">
+        <div className="mb-8 flex items-center gap-2 lg:hidden">{steps.map((_,i)=><span key={i} className={`h-1 flex-1 ${i<=step?'bg-[#e88a34]':'bg-white/10'}`}/>)}</div>
         <AnimatePresence mode="wait">
-          {/* Step 0: Language */}
-          {step === 0 && (
-            <motion.div
-              key="lang"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-            >
-              <div className="text-center mb-8">
-                <Globe2 className="w-12 h-12 text-accent mx-auto mb-4" />
-                <h2 className="text-2xl font-semibold mb-2">Choose your language</h2>
-                <p className="text-muted-foreground">Select your preferred language for the ARTHDRISHTI experience</p>
-              </div>
-              <div className="space-y-3">
-                {LANGUAGES.map((lang) => (
-                  <button
-                    key={lang.code}
-                    onClick={() => setLanguage(lang.code as 'en' | 'hi' | 'hinglish')}
-                    className={`w-full p-4 rounded border text-left transition-all ${
-                      language === lang.code
-                        ? 'border-foreground bg-secondary'
-                        : 'border-border hover:border-foreground/10'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-medium">{lang.label}</p>
-                        <p className="text-sm text-muted-foreground">{lang.native}</p>
-                      </div>
-                      {language === lang.code && <CheckCircle2 className="w-5 h-5 text-teal" />}
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </motion.div>
-          )}
-
-          {/* Step 1: Phone */}
-          {step === 1 && (
-            <motion.div
-              key="phone"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-            >
-              <div className="text-center mb-8">
-                <Phone className="w-12 h-12 text-accent mx-auto mb-4" />
-                <h2 className="text-2xl font-semibold mb-2">Verify your mobile number</h2>
-                <p className="text-muted-foreground">We&apos;ll send you a one-time code to verify your identity</p>
-              </div>
-              <div>
-                <label className="text-sm font-medium mb-2 block">Mobile Number</label>
-                <div className="flex gap-2">
-                  <span className="px-3 py-2 bg-secondary border border-border rounded text-sm">+91</span>
-                  <input
-                    type="tel"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
-                    placeholder="98765 43210"
-                    className="flex-1 px-3 py-2 bg-background border border-border rounded text-sm outline-none focus:border-foreground/20 transition-colors"
-                  />
-                </div>
-                <p className="text-xs text-muted-foreground mt-2">
-                  By continuing, you agree to ARTHDRISHTI&apos;s terms of service and privacy policy.
-                </p>
-              </div>
-            </motion.div>
-          )}
-
-          {/* Step 2: Goals */}
-          {step === 2 && (
-            <motion.div
-              key="goals"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-            >
-              <div className="text-center mb-8">
-                <Target className="w-12 h-12 text-accent mx-auto mb-4" />
-                <h2 className="text-2xl font-semibold mb-2">What would you like help with?</h2>
-                <p className="text-muted-foreground">Select all that apply. This helps ARTHDRISHTI personalize your experience.</p>
-              </div>
-              <div className="grid sm:grid-cols-2 gap-3">
-                {GOALS.map((goal) => (
-                  <button
-                    key={goal.id}
-                    onClick={() => toggleGoal(goal.id)}
-                    className={`p-4 rounded border text-left transition-all ${
-                      selectedGoals.includes(goal.id)
-                        ? 'border-foreground bg-secondary'
-                        : 'border-border hover:border-foreground/10'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <goal.icon className="w-5 h-5 text-muted-foreground" />
-                      <div>
-                        <p className="text-sm font-medium">{goal.label}</p>
-                        <p className="text-xs text-muted-foreground">{goal.native}</p>
-                      </div>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </motion.div>
-          )}
-
-          {/* Step 3: Consent */}
-          {step === 3 && (
-            <motion.div
-              key="consent"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-            >
-              <div className="text-center mb-8">
-                <Shield className="w-12 h-12 text-teal mx-auto mb-4" />
-                <h2 className="text-2xl font-semibold mb-2">Data consent</h2>
-                <p className="text-muted-foreground">Here is what ARTHDRISHTI will use and why.</p>
-              </div>
-              <div className="space-y-4">
-                {[
-                  { id: 'transactions', label: 'Transaction History', desc: 'To understand your spending patterns', required: true },
-                  { id: 'income', label: 'Income Patterns', desc: 'To assess stability and build models', required: true },
-                  { id: 'emi', label: 'EMI & Debt Data', desc: 'To evaluate debt burden and suitability', required: true },
-                  { id: 'savings', label: 'Savings Behavior', desc: 'To build personalized recommendations', required: false },
-                ].map((item) => (
-                  <div key={item.id} className="flex items-center justify-between p-4 bg-card border border-border rounded">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <p className="text-sm font-medium">{item.label}</p>
-                        {item.required && <span className="text-[10px] px-1.5 py-0.5 bg-secondary rounded text-muted-foreground">Required</span>}
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-0.5">{item.desc}</p>
-                    </div>
-                    <button
-                      onClick={() => setConsents(prev => ({ ...prev, [item.id]: !prev[item.id as keyof typeof prev] }))}
-                      disabled={item.required}
-                      className={`w-12 h-6 rounded-full transition-colors relative ${
-                        consents[item.id as keyof typeof consents] ? 'bg-teal' : 'bg-secondary'
-                      } ${item.required ? 'opacity-70' : ''}`}
-                    >
-                      <div className={`w-4 h-4 bg-white rounded-full absolute top-1 transition-transform ${
-                        consents[item.id as keyof typeof consents] ? 'translate-x-7' : 'translate-x-1'
-                      }`} />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </motion.div>
-          )}
-
-          {/* Step 4: Complete */}
-          {step === 4 && (
-            <motion.div
-              key="complete"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              className="text-center py-12"
-            >
-              <div className="w-16 h-16 bg-teal/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <CheckCircle2 className="w-8 h-8 text-teal" />
-              </div>
-              <h2 className="text-2xl font-semibold mb-2">You&apos;re all set!</h2>
-              <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-                ARTHDRISHTI will now analyze your financial life and provide personalized insights.
-              </p>
-              <button
-                onClick={() => window.location.href = '/dashboard'}
-                className="px-8 py-3 bg-primary text-primary-foreground rounded font-medium text-sm hover:bg-primary/90 transition-colors flex items-center gap-2 mx-auto"
-              >
-                Explore my financial life
-                <ArrowRight className="w-4 h-4" />
-              </button>
-            </motion.div>
-          )}
+          {step===0&&<Panel key="welcome" icon={<Eye/>} eyebrow="Welcome to ARTHDRISHTI" title="Your financial life, ready to be understood." copy="This guided demo uses deterministic local data. No bank credentials or real money movement is involved."><button onClick={next} className="primary-action">Begin with Ravi <ArrowRight className="h-4 w-4"/></button></Panel>}
+          {step===1&&<Panel key="language" icon={<Globe2/>} eyebrow="Language" title="How should ARTHDRISHTI speak with you?" copy="Choose any language now. You can switch at any time."><div className="grid gap-3 sm:grid-cols-3">{([['en','English'],['hi','हिंदी'],['hinglish','Hinglish']] as [Language,string][]).map(([id,label])=><button key={id} onClick={()=>setLanguage(id)} className={`border p-5 text-left ${language===id?'border-[#e88a34] bg-[#e88a34]/10':'border-white/12'}`}><span className="text-lg">{label}</span><span className="mt-2 block text-[10px] uppercase tracking-wider text-white/30">{id}</span></button>)}</div><Nav back={back} next={next}/></Panel>}
+          {step===2&&<Panel key="verify" icon={<Smartphone/>} eyebrow="Demo authentication" title="Verify your mobile number." copy="The number and OTP are pre-filled for this offline demo. Existing demo authentication is preserved."><label className="block"><span className="micro-label !text-white/30">Mobile number</span><div className="mt-3 flex border border-white/15"><span className="border-r border-white/15 p-4 text-sm text-white/45">+91</span><input value={mobile} onChange={e=>setMobile(e.target.value)} className="flex-1 bg-transparent p-4 outline-none"/></div></label><label className="mt-5 block"><span className="micro-label !text-white/30">One-time password</span><input value={otp} onChange={e=>setOtp(e.target.value)} inputMode="numeric" className="font-financial mt-3 w-full border border-white/15 bg-transparent p-4 tracking-[.6em] outline-none"/></label><p className="mt-3 text-[10px] text-white/25">Demo OTP: 123456</p><Nav back={back} next={next}/></Panel>}
+          {step===3&&<Panel key="goals" icon={<Fingerprint/>} eyebrow="Financial intent" title="What should ARTHDRISHTI help protect?" copy="Intent shapes recommendations. It never becomes a product sales target."><div className="grid gap-3 sm:grid-cols-2">{['Build emergency fund','Reduce debt pressure','Plan a major purchase','Understand spending'].map(g=><button key={g} onClick={()=>setGoals(v=>v.includes(g)?v.filter(x=>x!==g):[...v,g])} className={`flex items-center justify-between border p-4 text-left text-sm ${goals.includes(g)?'border-[#e88a34] bg-[#e88a34]/8':'border-white/12 text-white/55'}`}>{g}{goals.includes(g)&&<Check className="h-4 w-4 text-[#e88a34]"/>}</button>)}</div><Nav back={back} next={next}/></Panel>}
+          {step===4&&<Panel key="connect" icon={<Database/>} eyebrow="Connect financial data" title="One demo source. Four explicit purposes." copy="The deterministic Ravi fixture simulates 6 months of transaction, income, EMI and savings history."><div className="border border-white/12">{[['Transactions','Spending intelligence'],['Income','Health and affordability'],['EMI & debt','Suitability'],['Savings','Liquidity and resilience']].map(([a,b])=><div key={a} className="flex items-center justify-between border-b last:border-b-0 border-white/10 p-4"><div><p className="text-sm">{a}</p><p className="mt-1 text-[10px] text-white/30">{b}</p></div><Check className="h-4 w-4 text-[#75bca5]"/></div>)}</div><div className="mt-5 flex gap-3 border-l-2 border-[#e88a34] bg-white/[.035] p-4"><LockKeyhole className="h-4 w-4 shrink-0 text-[#e88a34]"/><p className="text-[11px] leading-5 text-white/38">By continuing, you enable these purposes for the demo. Optional consent can be revoked later.</p></div><Nav back={back} next={next} label="Connect demo data"/></Panel>}
+          {step===5&&<Panel key="understand" icon={<Eye/>} eyebrow="Understanding your financial life" title={inference[inferenceStep]} copy="The intelligence pipeline is deterministic, local and available without an AI API."><div className="mt-10 space-y-4">{inference.map((text,i)=><div key={text} className={`flex items-center gap-4 text-sm ${i<=inferenceStep?'text-white':'text-white/18'}`}><span className={`grid h-7 w-7 place-items-center border ${i<inferenceStep?'border-[#2d7a65] bg-[#2d7a65]/20 text-[#75bca5]':i===inferenceStep?'border-[#e88a34] text-[#e88a34]':'border-white/10'}`}>{i<inferenceStep?<Check className="h-3.5 w-3.5"/>:<span className={i===inferenceStep?'h-1.5 w-1.5 rounded-full bg-[#e88a34] breathe':''}/>}</span>{text}</div>)}</div></Panel>}
+          {step===6&&<Panel key="ready" icon={<ShieldCheck/>} eyebrow="ARTHDRISHTI ready" title="Your financial life is ready." copy="Ravi’s current state is tightening. The first priority is protection and recovery—not another product."><div className="grid grid-cols-3 gap-px bg-white/10 border border-white/10">{[['Health','64/100'],['Buffer','2.4 mo'],['Priority','Recover']].map(([a,b])=><div key={a} className="bg-[#071a17] p-4"><p className="micro-label !text-white/25">{a}</p><p className="font-financial mt-3 text-lg">{b}</p></div>)}</div><button onClick={()=>{setPersona('ravi');setIsOnboarded(true);router.push('/dashboard')}} className="primary-action mt-8">Open financial home <ArrowRight className="h-4 w-4"/></button></Panel>}
         </AnimatePresence>
-
-        {/* Navigation */}
-        {step < totalSteps - 1 && (
-          <div className="flex items-center justify-between mt-8">
-            <button
-              onClick={() => setStep(s => s - 1)}
-              disabled={step === 0}
-              className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
-            >
-              <ChevronLeft className="w-4 h-4" />
-              Back
-            </button>
-            <button
-              onClick={() => setStep(s => s + 1)}
-              disabled={!canProceed()}
-              className="flex items-center gap-1 px-4 py-2 bg-primary text-primary-foreground rounded text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
-            >
-              Continue
-              <ChevronRight className="w-4 h-4" />
-            </button>
-          </div>
-        )}
-      </div>
+      </div></section>
     </div>
-  );
+    <style jsx global>{`.primary-action{display:inline-flex;align-items:center;gap:.75rem;background:#e88a34;color:#10211d;padding:.9rem 1.25rem;font-size:.7rem;font-weight:800;text-transform:uppercase;letter-spacing:.12em}.primary-action:hover{background:#f0a05a}`}</style>
+  </div>;
 }
+
+function Panel({icon,eyebrow,title,copy,children}:{icon:React.ReactNode;eyebrow:string;title:string;copy:string;children:React.ReactNode}){return <motion.section initial={{opacity:0,y:12}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-8}} transition={{duration:.35}}><span className="grid h-12 w-12 place-items-center border border-[#e88a34]/35 bg-[#e88a34]/8 text-[#e88a34]">{icon}</span><p className="eyebrow mt-8 !text-[#e88a34]">{eyebrow}</p><h2 className="mt-5 text-4xl font-medium leading-[1.02] tracking-[-.05em] md:text-5xl">{title}</h2><p className="mt-5 mb-8 max-w-xl text-sm leading-6 text-white/42">{copy}</p>{children}</motion.section>}
+function Nav({back,next,label='Continue'}:{back:()=>void;next:()=>void;label?:string}){return <div className="mt-8 flex items-center justify-between border-t border-white/10 pt-6"><button onClick={back} className="flex items-center gap-2 text-xs text-white/40"><ArrowLeft className="h-4 w-4"/>Back</button><button onClick={next} className="primary-action">{label}<ArrowRight className="h-4 w-4"/></button></div>}
