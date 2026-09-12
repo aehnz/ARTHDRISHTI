@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { ArrowRight, Check, ChevronRight, Info, Shield, TrendingDown, TrendingUp } from 'lucide-react';
 import type { DemoState, FinancialState, Insight, TrajectoryPoint } from '@/types';
-import { formatINR } from '@/data/intelligence';
+import { formatINR } from '@/lib/format';
 
 export function PageHeader({ eyebrow, title, description, aside }: { eyebrow: string; title: string; description?: string; aside?: React.ReactNode }) {
   return <header className="border-b hairline bg-[#f8f5ee]">
@@ -22,7 +22,7 @@ export function PageHeader({ eyebrow, title, description, aside }: { eyebrow: st
 export function HealthScore({ state, dark = false }: { state: FinancialState; dark?: boolean }) {
   const circumference = 2 * Math.PI * 72;
   const dash = (state.healthScore / 100) * circumference;
-  const color = state.healthScore >= 80 ? '#56a88d' : state.healthScore >= 55 ? '#e88a34' : '#d46b61';
+  const color = state.healthBand === 'STRONG' ? '#56a88d' : state.healthBand === 'STABLE' || state.healthBand === 'TIGHTENING' ? '#e88a34' : '#d46b61';
   return <div className="relative mx-auto aspect-square w-full max-w-[280px]">
     <svg viewBox="0 0 184 184" className="h-full w-full -rotate-90">
       <circle cx="92" cy="92" r="72" fill="none" stroke={dark ? 'rgba(255,255,255,.09)' : '#ded7ca'} strokeWidth="6" />
@@ -46,9 +46,9 @@ export function HealthScore({ state, dark = false }: { state: FinancialState; da
 export function MetricRail({ state }: { state: FinancialState }) {
   const metrics = [
     ['Monthly income', formatINR(state.income.monthly), state.income.stability],
-    ['EMI burden', `${state.debt.emiBurdenRatio}%`, state.debt.emiBurdenRatio > 35 ? 'attention' : 'healthy'],
+    ['EMI burden', `${state.debt.emiBurdenRatio}%`, state.risk.contributingFactors?.find(item => item.toLowerCase().includes('emi')) ?? 'monitored'],
     ['Savings rate', `${state.savings.rate}%`, state.savings.trend >= 0 ? 'improving' : `${state.savings.trend}% trend`],
-    ['Emergency buffer', `${state.savings.bufferMonths} mo`, state.savings.bufferMonths < 3 ? 'below 3-month floor' : 'resilient'],
+    ['Emergency buffer', `${state.savings.bufferMonths} mo`, state.healthComponents.find(item => item.key === 'liquidity')?.explanation ?? 'monitored'],
     ['Monthly headroom', formatINR(state.cashFlow.monthlySurplus), state.cashFlow.trend],
   ];
   return <div className="grid border-y hairline bg-[#f8f5ee] sm:grid-cols-2 lg:grid-cols-5">
@@ -128,5 +128,5 @@ export function Trend({ value }: { value: number }) {
 }
 
 export function PrototypeNote() {
-  return <div className="flex gap-3 border-l-2 border-[#e88a34] bg-[#e88a34]/7 p-4 text-xs leading-5 text-muted-foreground"><Info className="mt-0.5 h-4 w-4 shrink-0 text-[#a46020]" /><p>This prototype provides simulated affordability and financial education. Actual lending decisions require bureau data, underwriting, lender policy and regulatory checks.</p></div>;
+  return <div className="flex gap-3 border-l-2 border-[#e88a34] bg-[#e88a34]/7 p-4 text-xs leading-5 text-muted-foreground"><Info className="mt-0.5 h-4 w-4 shrink-0 text-[#a46020]" /><p>Affordability results are illustrative and educational. Actual lending decisions require bureau data, underwriting, lender policy and regulatory checks.</p></div>;
 }

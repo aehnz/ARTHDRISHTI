@@ -3,10 +3,12 @@
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { ArrowRight, BrainCircuit, ChevronRight, Shield, SlidersHorizontal } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { DecisionMark, PageHeader, PrototypeNote } from '@/components/FinancialVisuals';
 import { useApp } from '@/context/AppContext';
-import { evaluateLoan, formatINR } from '@/data/intelligence';
+import { api } from '@/lib/api';
+import { formatINR } from '@/lib/format';
+import type { LoanAssessment } from '@/types';
 
 export default function LoanDecisionPage() {
   const { demoState } = useApp();
@@ -14,7 +16,16 @@ export default function LoanDecisionPage() {
   const [tenure, setTenure] = useState(60);
   const [apr, setApr] = useState(13.2);
   const [purpose, setPurpose] = useState('Personal need');
-  const assessment = useMemo(() => evaluateLoan(demoState, amount, tenure, apr), [demoState, amount, tenure, apr]);
+  const [assessment, setAssessment] = useState<LoanAssessment>(demoState.loanAssessment);
+  const [simulationError, setSimulationError] = useState<string | null>(null);
+  useEffect(() => {
+    let active = true;
+    const timer = window.setTimeout(() => api.simulateLoan(amount, tenure, apr, purpose)
+      .then(result => { if (active) { setAssessment(result); setSimulationError(null); } })
+      .catch(error => { if (active) setSimulationError(error instanceof Error ? error.message : 'Simulation unavailable.'); })
+      , 120);
+    return () => { active = false; window.clearTimeout(timer); };
+  }, [amount, tenure, apr, purpose]);
   const no = assessment.recommendation === 'NOT_RECOMMENDED_RIGHT_NOW' || assessment.recommendation === 'BLOCKED';
   const maxBurden = Math.max(65, assessment.affordabilityRatio + 5);
   return <div>
@@ -32,13 +43,14 @@ export default function LoanDecisionPage() {
       </aside>
 
       <div className="space-y-6">
-        <motion.section key={`${amount}-${tenure}-${apr}`} initial={{opacity:.6,y:5}} animate={{opacity:1,y:0}} className={`border p-6 md:p-9 ${no ? 'border-[#b84f49]/30 bg-[#b84f49]/[.045]' : 'border-[#2d7a65]/30 bg-[#2d7a65]/[.045]'}`}>
+        <motion.section key={`${assessment.requestedAmount}-${assessment.tenure}-${assessment.apr}`} initial={{opacity:.6,y:5}} animate={{opacity:1,y:0}} className={`border p-6 md:p-9 ${no ? 'border-[#b84f49]/30 bg-[#b84f49]/[.045]' : 'border-[#2d7a65]/30 bg-[#2d7a65]/[.045]'}`}>
           <p className="eyebrow">{no ? 'Protection decision' : 'Suitability decision'}</p>
           <div className="mt-6 flex flex-col justify-between gap-6 md:flex-row md:items-start">
             <div><DecisionMark decision={assessment.recommendation}/><h2 className="mt-7 max-w-2xl text-3xl font-medium leading-tight tracking-[-.045em] md:text-5xl">{no ? 'This obligation would materially increase financial stress.' : 'This can fit, with the right guardrails.'}</h2></div>
             <div className="shrink-0 text-right"><p className="micro-label">Confidence</p><p className="font-financial mt-2 text-4xl">{Math.round(assessment.governance.confidence*100)}%</p></div>
           </div>
           <p className="mt-7 max-w-3xl text-sm leading-6 text-muted-foreground">{no ? 'This is protection, not rejection. Strengthen your buffer first, then revisit the decision from a more resilient position.' : 'The simulation remains within the current affordability band, but actual eligibility and approval require lender underwriting.'}</p>
+          {simulationError&&<p className="mt-3 text-xs text-[#b84f49]">{simulationError}</p>}
         </motion.section>
 
         <section className="surface">

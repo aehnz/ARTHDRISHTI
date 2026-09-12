@@ -2,43 +2,27 @@
 
 import Link from 'next/link';
 import { ArrowRight, CalendarCheck, Circle, Flag, Shield } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { PageHeader, Trajectory } from '@/components/FinancialVisuals';
 import { useApp } from '@/context/AppContext';
-import { formatINR, pct } from '@/data/intelligence';
+import { api } from '@/lib/api';
+import { formatINR } from '@/lib/format';
+import type { RecoveryPlan } from '@/types';
 
 export default function RecoveryPage() {
   const { demoState } = useApp();
   const [commitment, setCommitment] = useState(80);
-  const strong = demoState.financialState.healthScore >= 80;
+  const [plan, setPlan] = useState<RecoveryPlan>(demoState.recoveryPlan);
+  useEffect(() => {
+    let active = true;
+    const timer = window.setTimeout(() => api.simulatePlan(commitment).then(result => { if (active) setPlan(result); }).catch(() => undefined), 120);
+    return () => { active = false; window.clearTimeout(timer); };
+  }, [commitment]);
+  const strong = plan.planType === 'GROWTH';
   const base = demoState.financialState;
-  const data = useMemo(()=> {
-    const factor=commitment/100;
-    if(strong) return [
-      {label:'Today',health:base.healthScore,buffer:base.savings.bufferMonths,cashFlow:base.cashFlow.monthlySurplus},
-      {label:'3 months',health:Math.round(base.healthScore+2*factor),buffer:pct(base.savings.bufferMonths+.3*factor),cashFlow:Math.round(base.cashFlow.monthlySurplus+4500*factor),projected:true},
-      {label:'6 months',health:Math.round(base.healthScore+4*factor),buffer:pct(base.savings.bufferMonths+.6*factor),cashFlow:Math.round(base.cashFlow.monthlySurplus+8000*factor),projected:true},
-      {label:'12 months',health:Math.min(96,Math.round(base.healthScore+6*factor)),buffer:pct(base.savings.bufferMonths+1.2*factor),cashFlow:Math.round(base.cashFlow.monthlySurplus+12000*factor),projected:true},
-    ];
-    const targetHealth=base.healthScore<40?58:76, targetBuffer=base.healthScore<40?1.7:3.2;
-    return [
-      {label:'Today',health:base.healthScore,buffer:base.savings.bufferMonths,cashFlow:base.cashFlow.monthlySurplus},
-      {label:'30 days',health:Math.round(base.healthScore+(targetHealth-base.healthScore)*.32*factor),buffer:pct(base.savings.bufferMonths+(targetBuffer-base.savings.bufferMonths)*.28*factor),cashFlow:Math.round(base.cashFlow.monthlySurplus+2500*factor),projected:true},
-      {label:'60 days',health:Math.round(base.healthScore+(targetHealth-base.healthScore)*.68*factor),buffer:pct(base.savings.bufferMonths+(targetBuffer-base.savings.bufferMonths)*.63*factor),cashFlow:Math.round(base.cashFlow.monthlySurplus+5200*factor),projected:true},
-      {label:'90 days',health:Math.round(base.healthScore+(targetHealth-base.healthScore)*factor),buffer:pct(base.savings.bufferMonths+(targetBuffer-base.savings.bufferMonths)*factor),cashFlow:Math.round(base.cashFlow.monthlySurplus+7600*factor),projected:true},
-    ];
-  },[base,commitment,strong]);
-  const steps = strong ? [
-    ['Now','Ring-fence six months of liquidity','Keep resilience intact before allocating surplus.'],
-    ['Month 1','Increase home-goal allocation','Move ₹20,000 more each month into the goal vault.'],
-    ['Month 3','Review expensive debt','Compare prepayment benefit with goal acceleration.'],
-    ['Month 6','Protect future income','Review long-term reserves and income continuity.'],
-  ] : [
-    ['Week 1','Stop recurring leaks','Cancel low-use subscriptions and set delivery guardrails.'],
-    ['Month 1','Stabilise cash flow','Restore salary-day transfer and sequence obligations.'],
-    ['Month 2','Create ₹7,000 headroom','Reduce discretionary categories without cutting essentials.'],
-    ['Month 3','Build the emergency reserve','Direct recovered headroom into the 90-day buffer.'],
-  ];
+  const data = plan.trajectory;
+  const stepLabels = ['Now','Month 1','Month 2','Month 3'];
+  const steps = plan.priorityActions.map((action,index)=>[stepLabels[index]??`Step ${index+1}`,action,index===0?plan.description:'Sequenced from the active backend plan.']);
   return <div>
     <PageHeader eyebrow={strong?'Growth · Wealth acceleration':'Recovery · 90-day plan'} title={strong?'Turn financial strength into faster progress.':'Recovery should feel like a path, not a warning.'} description={strong?'Preserve resilience while accelerating high-priority goals. This is not an investment recommendation.':'A focused plan to restore liquidity, reduce avoidable pressure and rebuild decision-making room.'} aside={<div className="font-financial text-right"><p className="text-4xl">{data.at(-1)?.health}<span className="text-lg text-muted-foreground">/100</span></p><p className="micro-label mt-2">projected outcome</p></div>} />
     <section className="surface-dark grid-rule">
@@ -60,6 +44,6 @@ export default function RecoveryPage() {
         <div className="border-l-2 border-[#2d7a65] bg-[#2d7a65]/8 p-6"><Shield className="h-5 w-5 text-[#2d7a65]"/><p className="mt-4 text-sm font-semibold">{strong?'Six-month reserve remains protected.':'No product recommendation is needed right now.'}</p><p className="mt-2 text-xs leading-5 text-muted-foreground">{strong?'Only surplus above the reserve target is allocated.':'The highest-value action is restoring financial resilience.'}</p></div>
       </aside>
     </div></section>
-    <section className="border-t hairline bg-[#e9e3d8] py-10"><div className="page-wrap flex flex-col justify-between gap-5 md:flex-row md:items-center"><div className="flex items-center gap-4"><CalendarCheck className="h-5 w-5 text-[#e88a34]"/><div><p className="font-semibold">{strong?'Growth plan ready':'Recovery plan ready'}</p><p className="mt-1 text-xs text-muted-foreground">All projections update from the active customer and scenario.</p></div></div><Link href={strong?'/goals':'/what-if'} className="inline-flex items-center gap-3 bg-[#102b26] px-5 py-3 text-xs font-bold uppercase tracking-wider text-white">{strong?'Open goals':'Test another scenario'}<ArrowRight className="h-4 w-4"/></Link></div></section>
+    <section className="border-t hairline bg-[#e9e3d8] py-10"><div className="page-wrap flex flex-col justify-between gap-5 md:flex-row md:items-center"><div className="flex items-center gap-4"><CalendarCheck className="h-5 w-5 text-[#e88a34]"/><div><p className="font-semibold">{strong?'Growth plan ready':'Recovery plan ready'}</p><p className="mt-1 text-xs text-muted-foreground">All projections use your latest authenticated financial state.</p></div></div><Link href={strong?'/goals':'/what-if'} className="inline-flex items-center gap-3 bg-[#102b26] px-5 py-3 text-xs font-bold uppercase tracking-wider text-white">{strong?'Open goals':'Explore an adjustment'}<ArrowRight className="h-4 w-4"/></Link></div></section>
   </div>;
 }

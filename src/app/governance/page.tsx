@@ -4,16 +4,15 @@ import { Check, CircleAlert, Clock3, X } from 'lucide-react';
 import { useState } from 'react';
 import { DecisionMark, PageHeader, PrototypeNote } from '@/components/FinancialVisuals';
 import { useApp } from '@/context/AppContext';
-import { evaluateLoan } from '@/data/intelligence';
 
 export default function GovernancePage(){
-  const {demoState}=useApp(); const a=evaluateLoan(demoState,500000,60); const [active,setActive]=useState(5);
+  const {demoState}=useApp(); const a=demoState.loanAssessment; const [active,setActive]=useState(5);
   const pipeline=[
     ['AI proposal','A ₹5 lakh borrowing question was converted into a structured simulation request.','passed'],
     ...a.governance.checks.map(c=>[c.name,c.detail,c.status]),
     ['Final action',a.recommendation==='RECOMMENDED'?'Recommendation may be shown.':'Product recommendation suppressed. Recovery action generated.',a.recommendation==='RECOMMENDED'?'passed':'failed'],
   ] as string[][];
-  const audit=[['10:42:31','Affordability evaluated'],['10:42:32','Financial stress signal inspected'],['10:42:32','Suitability threshold crossed'],['10:42:32','Product recommendation suppressed'],['10:42:33','Recovery action generated'],['10:42:33','Explanation trail attached']];
+  const audit=demoState.auditTrail.slice(-8).map(event=>[new Date(event.timestamp).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'}),event.action??event.eventType.replaceAll('_',' ')]);
   return <div>
     <PageHeader eyebrow="Trust · Governance core" title="The model proposes. Governance decides." description="Every high-impact action passes through purpose, fairness, suitability, stress, anti-predatory and explainability checks." aside={<DecisionMark decision={a.recommendation}/>} />
     <section className="surface-dark grid-rule py-12"><div className="page-wrap grid gap-10 lg:grid-cols-[1.25fr_.75fr]">
@@ -24,7 +23,7 @@ export default function GovernancePage(){
     </div></section>
     <section className="page-section"><div className="page-wrap grid gap-8 lg:grid-cols-[.8fr_1.2fr]">
       <div><p className="eyebrow">ARTHDRISHTI can say no</p><h2 className="section-title mt-5">Protection is a valid product outcome.</h2><p className="body-large mt-6">“Not recommended right now” is not a rejection. It prevents a sales nudge from weakening the customer’s financial resilience.</p><div className="mt-8"><PrototypeNote/></div></div>
-      <div className="surface p-6 md:p-8"><div className="flex items-center justify-between"><div><p className="eyebrow">Audit timeline</p><h3 className="mt-3 text-2xl font-medium tracking-[-.04em]">Decision trace · sim-5L-0926</h3></div><Clock3 className="h-5 w-5 text-[#e88a34]"/></div><div className="mt-7">{audit.map(([time,event],i)=><div key={event} className="grid grid-cols-[80px_16px_1fr] gap-3"><span className="font-financial py-3 text-[11px] text-muted-foreground">{time}</span><div className="relative flex justify-center"><span className={`mt-4 h-2 w-2 rounded-full ${i>2?'bg-[#e88a34]':'bg-[#2d7a65]'}`}/>{i<audit.length-1&&<span className="absolute bottom-0 top-5 w-px bg-border"/>}</div><p className="border-b hairline py-3 text-sm">{event}</p></div>)}</div></div>
+      <div className="surface min-w-0 p-6 md:p-8"><div className="flex items-center justify-between"><div className="min-w-0"><p className="eyebrow">Audit timeline</p><h3 className="mt-3 break-words text-2xl font-medium tracking-[-.04em]">Decision trace · {a.traceId??a.simulationId}</h3></div><Clock3 className="h-5 w-5 shrink-0 text-[#e88a34]"/></div><div className="mt-7">{audit.length?audit.map(([time,event],i)=><div key={`${time}-${event}-${i}`} className="grid grid-cols-[80px_16px_minmax(0,1fr)] gap-3"><span className="font-financial py-3 text-[11px] text-muted-foreground">{time}</span><div className="relative flex justify-center"><span className={`mt-4 h-2 w-2 rounded-full ${i>2?'bg-[#e88a34]':'bg-[#2d7a65]'}`}/>{i<audit.length-1&&<span className="absolute bottom-0 top-5 w-px bg-border"/>}</div><p className="min-w-0 break-words border-b hairline py-3 text-sm capitalize">{event}</p></div>):<p className="py-8 text-sm text-muted-foreground">Audit events appear as governed actions occur in this session.</p>}</div></div>
     </div></section>
   </div>;
 }

@@ -4,11 +4,11 @@ import Link from 'next/link';
 import { ArrowRight, BrainCircuit, Database, FileSearch, ShieldCheck } from 'lucide-react';
 import { DecisionMark, PageHeader, PrototypeNote } from '@/components/FinancialVisuals';
 import { useApp } from '@/context/AppContext';
-import { evaluateLoan, formatINR } from '@/data/intelligence';
+import { formatINR } from '@/lib/format';
 
 export default function ExplainPage(){
-  const {demoState}=useApp(); const s=demoState.financialState; const a=evaluateLoan(demoState,500000,60);
-  const flow=[['Customer data','Consent-scoped transaction, income, debt and savings signals'],['Feature engineering','EMI burden, buffer, cash-flow trend and behavioural deltas'],['Financial state',`Health ${s.healthScore} · Risk ${s.risk.level} · Buffer ${s.savings.bufferMonths} months`],['Risk & affordability models',`Prototype resilience ${demoState.modelInference.score} · ${a.affordabilityBand} affordability`],['Decision engine',`Projected EMI burden ${a.affordabilityRatio}%`],['Governance',a.recommendation.replaceAll('_',' ')],['Explanation','Numbers, consequences and a safer alternative']];
+  const {demoState}=useApp(); const s=demoState.financialState; const a=demoState.loanAssessment;
+  const flow=[['Customer data','Consent-scoped transaction, income, debt and savings signals'],['Feature engineering','EMI burden, buffer, cash-flow trend and behavioural deltas'],['Financial state',`Health ${s.healthScore} · Risk ${s.risk.level} · Buffer ${s.savings.bufferMonths} months`],['Risk & affordability models',`Financial resilience ${demoState.modelInference.score} · ${a.affordabilityBand} affordability`],['Decision engine',`Projected EMI burden ${a.affordabilityRatio}%`],['Governance',a.recommendation.replaceAll('_',' ')],['Explanation','Numbers, consequences and a safer alternative']];
   return <div>
     <PageHeader eyebrow="Trust · Explainability" title="Every important answer should survive the question: why?" description="Inspect the data, features, inference, policy checks, projected impact and alternative behind a financial decision." aside={<DecisionMark decision={a.recommendation}/>} />
     <section className="surface-dark grid-rule py-12"><div className="page-wrap">

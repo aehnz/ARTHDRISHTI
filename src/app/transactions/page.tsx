@@ -5,7 +5,7 @@ import { ArrowDownLeft, ArrowUpRight, CheckCircle2, Filter, Search, X } from 'lu
 import { useMemo, useState } from 'react';
 import { PageHeader } from '@/components/FinancialVisuals';
 import { useApp } from '@/context/AppContext';
-import { formatINR } from '@/data/intelligence';
+import { formatINR } from '@/lib/format';
 import type { Transaction, TransactionCategory } from '@/types';
 
 const categories: Array<'All' | TransactionCategory> = ['All','Salary','Rent','EMI','Food','Dining','Shopping','Mobility','Utilities','Healthcare','Subscriptions','Savings','UPI','Other'];
@@ -28,8 +28,8 @@ export default function TransactionsPage() {
     <PageHeader eyebrow="Money · Transaction intelligence" title="Transactions, with context." description="Search the ledger, inspect behaviour and trace every intelligence signal back to its source." aside={<div className="font-financial text-right"><p className="text-3xl">{filtered.length}</p><p className="micro-label mt-2">matching records</p></div>} />
     <div className="page-wrap py-8">
       <div className="surface grid gap-px bg-border lg:grid-cols-[1fr_auto_auto_auto]">
-        <label className="flex h-14 items-center gap-3 bg-card px-4"><Search className="h-4 w-4 text-muted-foreground" /><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search merchant, category or intelligence…" className="w-full bg-transparent text-sm outline-none" /></label>
-        <label className="flex h-14 items-center gap-2 bg-card px-4 text-xs text-muted-foreground"><Filter className="h-3.5 w-3.5" /><select value={category} onChange={e=>setCategory(e.target.value as typeof category)} className="bg-transparent font-semibold text-foreground outline-none">{categories.map(c=><option key={c}>{c}</option>)}</select></label>
+        <label className="flex h-14 items-center gap-3 bg-card px-4"><Search className="h-4 w-4 text-muted-foreground" /><input aria-label="Search transactions" value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search merchant, category or intelligence…" className="w-full bg-transparent text-sm outline-none" /></label>
+        <label className="flex h-14 items-center gap-2 bg-card px-4 text-xs text-muted-foreground"><Filter className="h-3.5 w-3.5" /><select aria-label="Transaction category" value={category} onChange={e=>setCategory(e.target.value as typeof category)} className="bg-transparent font-semibold text-foreground outline-none">{categories.map(c=><option key={c}>{c}</option>)}</select></label>
         <select aria-label="Transaction type" value={type} onChange={e=>setType(e.target.value as typeof type)} className="h-14 bg-card px-4 text-xs font-semibold outline-none"><option value="all">All movements</option><option value="debit">Debits</option><option value="credit">Credits</option></select>
         <select aria-label="Sort transactions" value={sort} onChange={e=>setSort(e.target.value as typeof sort)} className="h-14 bg-card px-4 text-xs font-semibold outline-none"><option value="recent">Most recent</option><option value="high">Amount high → low</option><option value="low">Amount low → high</option></select>
       </div>

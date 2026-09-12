@@ -5,26 +5,17 @@ import { motion } from 'framer-motion';
 import { ArrowRight, BrainCircuit, CreditCard, ShieldCheck } from 'lucide-react';
 import { HealthScore, PageHeader, Trend } from '@/components/FinancialVisuals';
 import { useApp } from '@/context/AppContext';
-import { formatINR } from '@/data/intelligence';
 
 export default function FinancialLifePage() {
   const { demoState } = useApp();
   const { customer, financialState: s } = demoState;
-  const dimensions = [
-    ['Income',[['Monthly',formatINR(s.income.monthly)],['Stability',s.income.stability],['Volatility',`${s.income.volatility}%`],['Trend',s.cashFlow.trend]]],
-    ['Spending',[['Essential',formatINR(s.spending.essential)],['Discretionary',formatINR(s.spending.discretionary)],['Trend',`${s.spending.trend>0?'+':''}${s.spending.trend}%`],['Potential leak',formatINR(s.spending.potentialLeaks)]]],
-    ['Debt',[['EMI burden',`${s.debt.emiBurdenRatio}%`],['Active obligations',String(s.debt.accounts)],['Outstanding',formatINR(s.debt.totalOutstanding,true)],['Utilization',`${s.debt.utilization}%`]]],
-    ['Savings',[['Available',formatINR(s.savings.total)],['Savings rate',`${s.savings.rate}%`],['Buffer',`${s.savings.bufferMonths} months`],['Monthly',formatINR(s.savings.monthlyContribution)]]],
-    ['Behaviour',[['Pattern',s.spending.trend>8?'Changing':'Consistent'],['Recurring rhythm',s.savings.trend<0?'Delayed':'On schedule'],['Spending signal',s.spending.trend>0?'Rising':'Controlled'],['Transaction confidence','94%']]],
-    ['Risk',[['Liquidity',s.savings.bufferMonths<3?'Needs attention':'Resilient'],['Repayment',s.debt.emiBurdenRatio>45?'High pressure':'On schedule'],['Cash-flow stress',s.risk.level],['Anomaly',demoState.scenario==='anomaly'?'Active':'None']]],
-    ['Opportunity',[['Monthly leaks',formatINR(s.spending.potentialLeaks)],['Goal headroom',formatINR(Math.max(0,s.cashFlow.monthlySurplus))],['Buffer gap',s.savings.bufferMonths<3?`${(3-s.savings.bufferMonths).toFixed(1)} months`:'Target met'],['Priority',s.healthScore>80?'Accelerate':'Build resilience']]],
-  ];
+  const dimensions = demoState.financialDna.categories.map(category => [category.category, Object.entries(category.metrics).slice(0,4).map(([key,value]) => [key.replaceAll('_',' '), String(value)])]);
   return <div>
     <PageHeader eyebrow="Money · Customer 360" title="Financial DNA" description={`The intelligence layer beneath every decision for ${customer.name}: income, spending, debt, savings, behaviour, risk and opportunity.`} aside={<div className="text-right"><p className="font-financial text-4xl">{s.healthScore}<span className="text-base text-muted-foreground">/100</span></p><p className="micro-label mt-2">financial health</p></div>} />
     <section className="page-wrap grid gap-6 py-8 lg:grid-cols-[.72fr_1.28fr]">
       <div className="surface-dark grid-rule p-7 md:p-9">
         <p className="eyebrow !text-white/35">Composite financial state</p><HealthScore state={s} dark />
-        <div className="mt-5 border-t border-white/10 pt-6"><p className="text-sm leading-6 text-white/52">{s.healthScore>=80?'Strong liquidity, disciplined savings and manageable debt create flexibility.':'Stable income is helping, but debt load and a thinner buffer are constraining resilience.'}</p></div>
+        <div className="mt-5 border-t border-white/10 pt-6"><p className="text-sm leading-6 text-white/52">{s.currentStateLabel}. {s.healthLabel}.</p></div>
       </div>
       <div className="surface">
         <div className="border-b hairline p-6"><div className="flex items-center justify-between"><div><p className="eyebrow">Health score anatomy</p><h2 className="mt-3 text-2xl font-medium tracking-[-.04em]">Nothing arbitrary. Every point has a source.</h2></div><BrainCircuit className="h-6 w-6 text-[#e88a34]"/></div></div>

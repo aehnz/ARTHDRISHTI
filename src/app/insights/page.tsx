@@ -6,7 +6,7 @@ import { ArrowRight, ChevronDown, CircleDollarSign, ShieldAlert, Sparkles, Trend
 import { useState } from 'react';
 import { Lineage, PageHeader } from '@/components/FinancialVisuals';
 import { useApp } from '@/context/AppContext';
-import { formatINR } from '@/data/intelligence';
+import { formatINR } from '@/lib/format';
 
 const iconFor = { 'money-leak': CircleDollarSign, risk: ShieldAlert, opportunity: TrendingUp, behaviour: Sparkles, positive: TrendingUp };
 

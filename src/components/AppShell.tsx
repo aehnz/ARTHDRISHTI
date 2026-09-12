@@ -2,14 +2,14 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Activity, ArrowUpRight, Banknote, ChevronDown, Command,
-  Landmark, Menu, MessageCircle, Search, ShieldCheck, Sparkles, X,
+  Landmark, LogOut, Menu, MessageCircle, Search, ShieldCheck, UserRound, X,
 } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useApp } from '@/context/AppContext';
-import type { DemoScenario, Language, PersonaId } from '@/types';
+import type { Language } from '@/types';
 
 const groups = [
   { label: 'Overview', href: '/dashboard', icon: Activity },
@@ -38,7 +38,7 @@ const commandItems = [
   ['Overview', '/dashboard'], ['Transactions', '/transactions'], ['Cash flow', '/cash-flow'],
   ['Financial DNA', '/financial-life'], ['Loan simulation', '/loan-decision'], ['What-if simulator', '/what-if'],
   ['Recovery plan', '/recovery'], ['Anomaly protection', '/protection'], ['Governance trace', '/governance'],
-  ['Explain my score', '/explain'], ['Consent center', '/consent'], ['Customer intelligence matrix', '/customers'], ['Ask ARTHDRISHTI', '/ask'],
+  ['Explain my score', '/explain'], ['Consent center', '/consent'], ['Ask ARTHDRISHTI', '/ask'],
 ];
 
 function Brand() {
@@ -74,56 +74,63 @@ function CommandPalette({ open, onClose }: { open: boolean; onClose: () => void 
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { language, setLanguage, persona, setPersona, demoScenario, setDemoScenario } = useApp();
+  const router = useRouter();
+  const { language, setLanguage, demoState, auth, isSessionLoading, isIntelligenceLoading, intelligenceError, refreshIntelligence, logout } = useApp();
   const [mobile, setMobile] = useState(false);
   const [palette, setPalette] = useState(false);
+  const [openNav, setOpenNav] = useState<string | null>(null);
+  const navCloseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const landing = pathname === '/';
+  const login = pathname === '/login';
+  const onboarding = pathname === '/onboarding';
+  const publicRoute = landing || login;
   useEffect(() => {
     const listener = (event: KeyboardEvent) => { if ((event.metaKey || event.ctrlKey) && event.key === 'k') { event.preventDefault(); setPalette(true); } };
     window.addEventListener('keydown', listener); return () => window.removeEventListener('keydown', listener);
   }, []);
+  useEffect(() => {
+    if (isSessionLoading) return;
+    if (!publicRoute && !auth) router.replace('/login');
+    else if (auth && auth.onboarding.status !== 'complete' && !onboarding) router.replace('/onboarding');
+    else if (auth?.onboarding.status === 'complete' && onboarding) router.replace('/dashboard');
+    else if (login && auth) router.replace(auth.onboarding.status === 'complete' ? '/dashboard' : '/onboarding');
+  }, [auth, isSessionLoading, login, onboarding, pathname, publicRoute, router]);
+  const protectedReady = Boolean(auth) && (onboarding || Boolean(auth?.onboarding.status === 'complete' && demoState && !isIntelligenceLoading));
+  const showAppNavigation = !publicRoute && !onboarding && Boolean(auth);
   return <div className="min-h-svh">
     <header className="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-[#071a17]/95 text-[#fffaf0] backdrop-blur-xl">
       <div className="mx-auto flex h-[72px] max-w-[1500px] items-center gap-5 px-4 sm:px-6">
         <Brand />
-        <nav className={`hidden h-full items-center gap-1 ${landing ? 'xl:flex' : 'min-[1440px]:flex'}`} aria-label="Primary navigation">
+        {showAppNavigation && <nav className="hidden h-full items-center gap-1 min-[1440px]:flex" aria-label="Primary navigation">
           {groups.map(group => group.href ? <Link key={group.label} href={group.href} className={`flex h-full items-center gap-2 border-b-2 px-3 text-xs font-medium tracking-wide transition ${pathname.startsWith(group.href) ? 'border-[#e88a34] text-white' : 'border-transparent text-white/58 hover:text-white'}`}><group.icon className="h-3.5 w-3.5" />{group.label}</Link> :
                   <details
                     key={group.label}
                     className="group relative h-full"
-                    onMouseLeave={(event) => {
-                      event.currentTarget.open = false;
-                    }}
+                    open={openNav === group.label}
+                    onMouseEnter={() => { if (navCloseTimer.current) clearTimeout(navCloseTimer.current); setOpenNav(group.label); }}
+                    onMouseLeave={() => { navCloseTimer.current = setTimeout(() => setOpenNav(current => current === group.label ? null : current), 55); }}
                   >
-              <summary className="flex h-full cursor-pointer list-none items-center gap-2 border-b-2 border-transparent px-3 text-xs font-medium tracking-wide text-white/58 transition hover:text-white"><group.icon className="h-3.5 w-3.5" />{group.label}<ChevronDown className="h-3 w-3 transition group-open:rotate-180" /></summary>
+              <summary onClick={event => { event.preventDefault(); setOpenNav(group.label); }} className="flex h-full cursor-pointer list-none items-center gap-2 border-b-2 border-transparent px-3 text-xs font-medium tracking-wide text-white/58 transition hover:text-white"><group.icon className="h-3.5 w-3.5" />{group.label}<ChevronDown className="h-3 w-3 transition group-open:rotate-180" /></summary>
               <div className="absolute left-0 top-[61px] w-72 max-w-[calc(100vw-2rem)] border border-white/10 bg-[#0b211d] p-2 shadow-2xl">
-                {group.items?.map(item => <Link key={item.href} href={item.href} className="block px-4 py-3 transition hover:bg-white/[.06]"><span className="block text-sm text-white/85">{item.label}</span><span className="mt-1 block text-[11px] text-white/38">{item.detail}</span></Link>)}
+                {group.items?.map(item => <Link onClick={() => setOpenNav(null)} key={item.href} href={item.href} className="block px-4 py-3 transition hover:bg-white/[.06]"><span className="block text-sm text-white/85">{item.label}</span><span className="mt-1 block text-[11px] text-white/38">{item.detail}</span></Link>)}
               </div>
             </details>)}
-        </nav>
+        </nav>}
         <div className="ml-auto flex items-center gap-2">
-          {!landing && <div className="hidden items-center border border-white/12 min-[1440px]:flex">
-            <select aria-label="Demo customer" value={persona} onChange={e => setPersona(e.target.value as PersonaId)} className="h-9 border-0 bg-transparent px-3 text-[11px] font-semibold uppercase tracking-wider text-white outline-none"><option value="ravi">Ravi · Recovery</option><option value="ananya">Ananya · Growth</option></select>
-            <span className="h-4 w-px bg-white/12" />
-            <select aria-label="Demo scenario" value={demoScenario} onChange={e => setDemoScenario(e.target.value as DemoScenario)} className="h-9 border-0 bg-transparent px-3 text-[11px] font-semibold uppercase tracking-wider text-white outline-none"><option value="stable">Stable</option><option value="tightening">Tightening</option><option value="stress">Financial stress</option><option value="anomaly">Fraud / anomaly</option><option value="growth">Growth</option></select>
-          </div>}
-          <button onClick={() => setPalette(true)} aria-label="Open command palette" className="hidden h-9 items-center gap-2 border border-white/12 px-3 text-[11px] text-white/55 transition hover:text-white md:flex"><Command className="h-3.5 w-3.5" /><span>⌘K</span></button>
+          {showAppNavigation && <button onClick={() => setPalette(true)} aria-label="Open command palette" className="hidden h-9 items-center gap-2 border border-white/12 px-3 text-[11px] text-white/55 transition hover:text-white md:flex"><Command className="h-3.5 w-3.5" /><span>⌘K</span></button>}
           <div className="hidden items-center gap-1 sm:flex">{(['en','hi','hinglish'] as Language[]).map(lang => <button key={lang} onClick={() => setLanguage(lang)} className={`px-2 py-2 text-[10px] font-semibold uppercase tracking-wider ${language === lang ? 'text-[#f19a49]' : 'text-white/38 hover:text-white'}`}>{lang === 'hinglish' ? 'Hing' : lang}</button>)}</div>
-          {landing && <Link href="/onboarding" className="hidden bg-[#e88a34] px-4 py-2.5 text-[11px] font-bold uppercase tracking-[.12em] text-[#10211d] sm:block">Enter demo</Link>}
-          <button onClick={() => setMobile(!mobile)} aria-label="Toggle menu" className={`p-2 ${landing ? 'xl:hidden' : 'min-[1440px]:hidden'}`}>{mobile ? <X /> : <Menu />}</button>
+          {publicRoute && !auth && <><Link href="/login" className="hidden border border-white/15 px-4 py-2.5 text-[11px] font-bold uppercase tracking-[.12em] text-white/75 sm:block">Sign in</Link><Link href="/login" className="hidden bg-[#e88a34] px-4 py-2.5 text-[11px] font-bold uppercase tracking-[.12em] text-[#10211d] sm:block">Explore demo</Link></>}
+          {showAppNavigation && auth && <details className="group relative hidden sm:block"><summary className="flex h-9 cursor-pointer list-none items-center gap-2 border border-white/12 px-3 text-[11px] text-white/70"><UserRound className="h-3.5 w-3.5" />{auth.user.name}<ChevronDown className="h-3 w-3" /></summary><div className="absolute right-0 top-11 w-52 border border-white/10 bg-[#0b211d] p-2 shadow-2xl"><Link href="/profile" className="block px-4 py-3 text-sm text-white/80 hover:bg-white/[.06]">Profile &amp; session</Link><button onClick={() => void logout().then(() => router.push('/'))} className="flex w-full items-center gap-2 px-4 py-3 text-left text-sm text-white/80 hover:bg-white/[.06]"><LogOut className="h-3.5 w-3.5" />Sign out</button></div></details>}
+          {showAppNavigation && <button onClick={() => setMobile(!mobile)} aria-label="Toggle menu" className="p-2 min-[1440px]:hidden">{mobile ? <X /> : <Menu />}</button>}
         </div>
       </div>
     </header>
-    <AnimatePresence>{mobile && <motion.div className={`fixed inset-0 z-40 overflow-y-auto bg-[#071a17] px-6 pb-10 pt-24 text-white ${landing ? 'xl:hidden' : 'min-[1440px]:hidden'}`} initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 24 }}>
-      <div className="mb-6 grid grid-cols-2 gap-2">
-        <select aria-label="Customer" value={persona} onChange={e => setPersona(e.target.value as PersonaId)} className="min-w-0 w-full border border-white/15 bg-white/[.04] p-3 text-xs"><option value="ravi">Ravi · Recovery</option><option value="ananya">Ananya · Growth</option></select>
-        <select aria-label="Scenario" value={demoScenario} onChange={e => setDemoScenario(e.target.value as DemoScenario)} className="min-w-0 w-full border border-white/15 bg-white/[.04] p-3 text-xs"><option value="stable">Stable</option><option value="tightening">Tightening</option><option value="stress">Stress</option><option value="anomaly">Anomaly</option><option value="growth">Growth</option></select>
-      </div>
+    <AnimatePresence>{mobile && showAppNavigation && <motion.div className="fixed inset-0 z-40 overflow-y-auto bg-[#071a17] px-6 pb-10 pt-24 text-white min-[1440px]:hidden" initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 24 }}>
       <div className="mb-6 flex border border-white/15 p-1">{(['en','hi','hinglish'] as Language[]).map(lang => <button key={lang} onClick={() => setLanguage(lang)} className={`flex-1 px-3 py-2 text-[10px] font-bold uppercase tracking-wider ${language === lang ? 'bg-[#e88a34] text-[#10211d]' : 'text-white/40'}`}>{lang === 'hinglish' ? 'Hinglish' : lang}</button>)}</div>
       {groups.map(group => <div key={group.label} className="border-t border-white/10 py-4"><p className="eyebrow !text-white/30">{group.label}</p>{group.href ? <Link onClick={() => setMobile(false)} href={group.href} className="mt-3 flex items-center justify-between text-xl">{group.label}<ArrowUpRight /></Link> : group.items?.map(item => <Link key={item.href} onClick={() => setMobile(false)} href={item.href} className="flex items-center justify-between py-3 text-lg text-white/75">{item.label}<ArrowUpRight className="h-4 w-4" /></Link>)}</div>)}
+      <div className="mt-6 border-t border-white/10 pt-6"><p className="text-sm text-white/60">{auth?.user.name}</p><Link onClick={() => setMobile(false)} href="/profile" className="mt-4 block text-sm">Profile &amp; session</Link><button onClick={() => void logout().then(() => router.push('/'))} className="mt-4 flex items-center gap-2 text-sm text-white/65"><LogOut className="h-4 w-4" />Sign out</button></div>
     </motion.div>}</AnimatePresence>
-    <main className="min-h-svh pt-[72px]">{children}</main>
-    <CommandPalette open={palette} onClose={() => setPalette(false)} />
-    {!landing && <div className="fixed bottom-4 right-4 z-30 hidden items-center gap-2 border border-[#d9d2c5] bg-[#faf8f3]/95 px-3 py-2 text-[10px] font-bold uppercase tracking-[.13em] text-[#64716d] shadow-lg backdrop-blur md:flex"><Sparkles className="h-3.5 w-3.5 text-[#e88a34]" />Deterministic demo</div>}
+    <main className="min-h-svh pt-[72px]">{publicRoute || protectedReady ? children : <div className="grid min-h-[calc(100svh-72px)] place-items-center bg-[#f8f5ee] px-6 text-center"><div><p className="eyebrow">ARTHDRISHTI</p><p className="mt-4 text-sm text-muted-foreground">{intelligenceError ?? 'Preparing your secure workspace…'}</p>{intelligenceError && <button onClick={refreshIntelligence} className="mt-6 bg-[#102b26] px-5 py-3 text-xs font-bold uppercase tracking-wider text-white">Try again</button>}</div></div>}</main>
+    {showAppNavigation && <CommandPalette open={palette} onClose={() => setPalette(false)} />}
   </div>;
 }

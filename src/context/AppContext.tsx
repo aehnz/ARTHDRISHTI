@@ -1,17 +1,18 @@
 'use client';
 
-import React, { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
-import type { DemoScenario, Language, PersonaId } from '@/types';
-import { getDemoState } from '@/data/intelligence';
+import React, { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
+import type { AuthContext, DemoState, Language } from '@/types';
+import { api } from '@/lib/api';
 
 type Message = { role: 'user' | 'assistant'; content: string };
 interface AppContextType {
   language: Language; setLanguage: (language: Language) => void;
-  persona: PersonaId; setPersona: (persona: PersonaId) => void;
-  demoScenario: DemoScenario; setDemoScenario: (scenario: DemoScenario) => void;
-  demoState: ReturnType<typeof getDemoState>;
-  isDemoMode: boolean; setIsDemoMode: (value: boolean) => void;
-  isOnboarded: boolean; setIsOnboarded: (value: boolean) => void;
+  demoState: DemoState;
+  auth: AuthContext | null; isSessionLoading: boolean;
+  isIntelligenceLoading: boolean; intelligenceError: string | null; refreshIntelligence: () => void;
+  isOnboarded: boolean;
+  refreshSession: () => Promise<AuthContext | null>;
+  logout: () => Promise<void>;
   chatMessages: Message[]; setChatMessages: (messages: Message[]) => void;
   addChatMessage: (message: Message) => void; t: (key: string) => string;
 }
@@ -32,26 +33,55 @@ const copy: Record<string, Record<Language, string>> = {
 const AppContext = createContext<AppContextType | null>(null);
 
 export function AppProvider({ children }: { children: ReactNode }) {
-  const [language, setLanguage] = useState<Language>('en');
-  const [persona, setPersonaState] = useState<PersonaId>('ravi');
-  const [demoScenario, setDemoScenario] = useState<DemoScenario>('tightening');
-  const [isDemoMode, setIsDemoMode] = useState(true);
-  const [isOnboarded, setIsOnboarded] = useState(true);
+  const [auth, setAuth] = useState<AuthContext | null>(null);
+  const [language, setLanguageState] = useState<Language>('en');
   const [chatMessages, setChatMessages] = useState<Message[]>([]);
-  const demoState = useMemo(() => getDemoState(persona, demoScenario), [persona, demoScenario]);
+  const [demoState, setDemoState] = useState<DemoState | null>(null);
+  const [isSessionLoading, setSessionLoading] = useState(true);
+  const [isIntelligenceLoading, setIntelligenceLoading] = useState(false);
+  const [intelligenceError, setIntelligenceError] = useState<string | null>(null);
 
-  const setPersona = useCallback((next: PersonaId) => {
-    setPersonaState(next);
-    setDemoScenario(next === 'ananya' ? 'growth' : 'tightening');
-    setChatMessages([]);
+  const loadOverview = useCallback(async (context: AuthContext) => {
+    if (context.onboarding.status !== 'complete') {
+      setDemoState(null);
+      return;
+    }
+    setIntelligenceLoading(true);
+    setIntelligenceError(null);
+    try { setDemoState(await api.overview()); }
+    catch (error) { setIntelligenceError(error instanceof Error ? error.message : 'ARTHDRISHTI intelligence service is temporarily unavailable.'); }
+    finally { setIntelligenceLoading(false); }
   }, []);
+
+  const refreshSession = useCallback(async () => {
+    setSessionLoading(true);
+    try {
+      const context = await api.authMeOptional();
+      setAuth(context);
+      if (context) {
+        setLanguageState(context.user.languagePreference);
+        await loadOverview(context);
+      } else setDemoState(null);
+      return context;
+    } finally { setSessionLoading(false); }
+  }, [loadOverview]);
+
+  useEffect(() => {
+    const timer = globalThis.setTimeout(() => { void refreshSession(); }, 0);
+    return () => globalThis.clearTimeout(timer);
+  }, [refreshSession]);
+
+  const refreshIntelligence = useCallback(() => { if (auth) void loadOverview(auth); }, [auth, loadOverview]);
+  const setLanguage = useCallback((next: Language) => { setLanguageState(next); if (auth) void api.updateLanguage(next).then(user => setAuth(previous => previous ? { ...previous, user } : previous)); }, [auth]);
+  const logout = useCallback(async () => { await api.logout(); setAuth(null); setDemoState(null); setChatMessages([]); }, []);
   const addChatMessage = useCallback((message: Message) => setChatMessages(previous => [...previous, message]), []);
   const t = useCallback((key: string) => copy[key]?.[language] ?? copy[key]?.en ?? key, [language]);
 
   return <AppContext.Provider value={{
-    language, setLanguage, persona, setPersona, demoScenario, setDemoScenario, demoState,
-    isDemoMode, setIsDemoMode, isOnboarded, setIsOnboarded,
-    chatMessages, setChatMessages, addChatMessage, t,
+    language, setLanguage, demoState: demoState as DemoState, auth, isSessionLoading,
+    isIntelligenceLoading, intelligenceError, refreshIntelligence,
+    isOnboarded: auth?.onboarding.status === 'complete',
+    refreshSession, logout, chatMessages, setChatMessages, addChatMessage, t,
   }}>{children}</AppContext.Provider>;
 }
 

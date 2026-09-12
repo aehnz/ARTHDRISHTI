@@ -5,14 +5,14 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowRight, CalendarClock, ChevronRight, CircleGauge, ShieldAlert, Sparkles } from 'lucide-react';
 import { useState } from 'react';
 import { useApp } from '@/context/AppContext';
-import { formatINR } from '@/data/intelligence';
+import { formatINR } from '@/lib/format';
 import { HealthScore, InsightRow, Lineage, MetricRail, NextBestAction, Trajectory, Trend } from '@/components/FinancialVisuals';
 
 export default function DashboardPage() {
   const { demoState, t } = useApp();
   const [selected, setSelected] = useState<string | null>(null);
   const { customer, financialState: state, insights } = demoState;
-  const strong = state.healthScore >= 80;
+  const strong = state.healthBand === 'STRONG';
   return <div>
     <section className="surface-dark grid-rule noise">
       <div className="page-wrap relative z-10 grid min-h-[520px] items-center gap-10 py-12 lg:grid-cols-[.9fr_1.1fr] lg:py-16">
@@ -21,7 +21,7 @@ export default function DashboardPage() {
           <motion.div key={state.healthScore} initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }}>
             <h1 className="mt-7 max-w-3xl text-[clamp(2.5rem,5vw,5.2rem)] font-medium leading-[.98] tracking-[-.06em]">{strong ? t('dashboard.strong') : t('dashboard.tightening')}</h1>
           </motion.div>
-          <p className="mt-6 text-sm text-white/40">{customer.name} · {customer.location} · {demoState.scenario.replace('-', ' ')}</p>
+          <p className="mt-6 text-sm text-white/40">{customer.name} · {customer.location}</p>
           <div className="mt-9 flex flex-wrap gap-3">
             <Link href="/financial-life" className="inline-flex items-center gap-3 bg-[#e88a34] px-5 py-3 text-xs font-bold uppercase tracking-[.12em] text-[#10211d]">Open Financial DNA <ArrowRight className="h-4 w-4" /></Link>
             <Link href="/ask" className="inline-flex items-center gap-3 border border-white/15 px-5 py-3 text-xs font-bold uppercase tracking-[.12em] text-white/65">Ask about this</Link>
@@ -61,7 +61,7 @@ export default function DashboardPage() {
             </div>
           </div>
           <Link href="/cash-flow" className="group mt-4 flex items-start gap-4 border border-border bg-card p-5 transition hover:border-[#e88a34]"><CalendarClock className="mt-1 h-5 w-5 text-[#e88a34]" /><div><p className="text-sm font-semibold">{formatINR(state.cashFlow.upcomingObligations)} due in the next 10 days</p><p className="mt-2 text-xs leading-5 text-muted-foreground">See salary, EMIs, rent, utilities and recurring payments on the cash-flow timeline.</p></div><ArrowRight className="ml-auto h-4 w-4 transition group-hover:translate-x-1" /></Link>
-          {demoState.scenario === 'anomaly' && <Link href="/protection" className="mt-4 flex items-center gap-4 bg-[#b84f49] p-5 text-white"><ShieldAlert className="h-5 w-5" /><span className="text-sm font-semibold">A transaction needs verification</span><ArrowRight className="ml-auto h-4 w-4" /></Link>}
+          {demoState.protection.unresolvedCount > 0 && <Link href="/protection" className="mt-4 flex items-center gap-4 bg-[#b84f49] p-5 text-white"><ShieldAlert className="h-5 w-5" /><span className="text-sm font-semibold">A transaction needs verification</span><ArrowRight className="ml-auto h-4 w-4" /></Link>}
         </aside>
       </div>
     </section>
